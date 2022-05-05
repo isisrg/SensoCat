@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+	<h1> ¡Bienvenido a SensoCat! </h1>
+  <div class="map" class="container py-4">
+    <!--           carga mas lento el mapa ->  <script src="https://onpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>-->
+    <script src="http://leafletjs.com/dist/leaflet.js"></script>
+    <div id="map" class="map map-home" style="margin:12px 0 12px 0;height:600px;"></div>
+    <script>
+        var map = L.map('map').setView([41.39238915483426, 2.1621599834744623], 11);
+        mapLink =
+            '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+        L.tileLayer(
+            'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; ' + mapLink + ' Contributors',
+                maxZoom: 18,
+            }).addTo(map);
+    </script>
+  </div>
+{% endblock %}
