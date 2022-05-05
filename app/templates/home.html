@@ -2,7 +2,7 @@
 
 {% block content %}
 	<h1> ¡Bienvenido a SensoCat! </h1>
-  <div class="map" class="container py-4">
+    <div class="map" class="container py-4">
     <!--           carga mas lento el mapa ->  <script src="https://onpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>-->
     <script src="http://leafletjs.com/dist/leaflet.js"></script>
     <div id="map" class="map map-home" style="margin:12px 0 12px 0;height:600px;"></div>
@@ -15,6 +15,29 @@
                 attribution: '&copy; ' + mapLink + ' Contributors',
                 maxZoom: 18,
             }).addTo(map);
+        var items_data = '{{ items_data }}'
+        console.log(JSON.stringify(items_data))
+        items_data = items_data.replaceAll("&#39;", "'")
+        console.log(items_data)
+        for (var count_row = 0; count_row < items_data.length; count_row++) {
+            marker = new L.marker([items_data[count_row}][0], [items_data[count_row][1]])
+                .bindPopup('')
+                .addTo(map)
+                .openPopup()
+        }
+
     </script>
   </div>
+
+      {% for count_row in range(0, row_size) %}
+        {% for count_col in range(0, col_size) %}
+            {{ items_data[count_row][count_col] }}
+        {% endfor %}
+    {% endfor %}
+
+
+
+
+
 {% endblock %}
+

@@ -18,7 +18,25 @@ from decimal import Decimal
 @app.route('/')
 @app.route('/home')
 def home():
-    return render_template('home.html', title='Home')
+    dynamodb = boto3.resource('dynamodb')
+
+    table = dynamodb.Table('Estaciones')
+    #Returns all of the table's data
+    table_data = table.scan()
+    #Returns the items from the data collected and saves it into pandas
+    items_data = pd.DataFrame(table_data['Items'])
+    print(items_data)
+
+    #Header values
+    header = items_data.columns.values
+    #Number of rows of the csv
+    row_size = items_data.shape[0]
+    #Number of columns of the csv
+    col_size = items_data.shape[1]
+
+    items_data=items_data.values.tolist()
+
+    return render_template('home.html', title='Home', items_data=items_data, header=header, row_size=row_size, col_size=col_size)
 
 @app.route('/about')
 def about():
