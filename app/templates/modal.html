@@ -1,0 +1,31 @@
+{% extends 'home.html'%}
+
+{% block modal %}
+<!-- Modal -->
+<div class="modal" id="exampleModalLong" tabindex="-1" role="dialog" aria-labelledby="exampleModalLongTitle" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+      </div>
+      <div class="modal-body">
+        ...
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary">Ir al sensor</button>
+        <a href="{{ url_for('home') }}" class="btn btn-secondary">Cerrar</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block script %}
+	<script type="text/javascript">
+		$(document).ready(function(){
+			console.log("window is loaded")
+			$("#exampleModalLong").modal("show")
+		})
+	</script>>
+
+{% endblock %}

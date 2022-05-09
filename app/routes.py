@@ -13,30 +13,30 @@ import numpy as np
 
 from decimal import Decimal
 
+dynamodb = boto3.resource('dynamodb')
+stations_table = dynamodb.Table('Estaciones')
 
 #DECORATORS
 @app.route('/')
 @app.route('/home')
 def home():
-    dynamodb = boto3.resource('dynamodb')
-
-    table = dynamodb.Table('Estaciones')
     #Returns all of the table's data
-    table_data = table.scan()
+    table_data = stations_table.scan()
     #Returns the items from the data collected and saves it into pandas
     items_data = pd.DataFrame(table_data['Items'])
-    print(items_data)
-
-    #Header values
-    header = items_data.columns.values
-    #Number of rows of the csv
-    row_size = items_data.shape[0]
-    #Number of columns of the csv
-    col_size = items_data.shape[1]
-
+    #print(items_data)
     items_data=items_data.values.tolist()
+    return render_template('home.html', title='Home', items_data=json.dumps(items_data))
 
-    return render_template('home.html', title='Home', items_data=items_data, header=header, row_size=row_size, col_size=col_size)
+@app.route('/home/modal')
+def modal():
+    #Returns all of the table's data
+    table_data = stations_table.scan()
+    #Returns the items from the data collected and saves it into pandas
+    items_data = pd.DataFrame(table_data['Items'])
+    #print(items_data)
+    items_data=items_data.values.tolist()
+    return render_template('modal.html', title='Home', items_data=json.dumps(items_data))
 
 @app.route('/about')
 def about():
