@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% block navbar %}
+    <a class="nav-link" aria-current="page" href="{{ url_for('home') }}">Home</a>
+    <a class="nav-link" href="{{ url_for('upload') }}">Subir archivo</a>
+    <a class="nav-link" href="{{ url_for('new_station') }}">Nueva estación</a>
+    <a class="nav-link active" href="{{ url_for('about') }}">Sobre nosotros</a>
+{% endblock %}
+
 {% block content %}
 	<h2> Sobre nosotros </h2>
 	<b>Esta página web sirve como prototipo para el grupo de investigación <a href="http://sans.ac.upc.edu">SANS</a> y conforma la parte prática del TFG "Sistema de monitorización de datos de senseores de calidad del aire" de la <a href="http://www.fib.upc.edu">Facultad de Informática de Barcelona</a> de la <a href="http://www.upc.edu">Universidad Politécnica de Cataluña</a>.</b> <br>
