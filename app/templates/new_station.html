@@ -28,8 +28,8 @@
 		{% endfor %}
 		</ul>
 		<br>
-		<button id="add-pollutant-field" type="button">Añadir contaminante</button>
-		<button type="submit">Guardar estación</button>
+		<button id="add-pollutant-field" type="button" class="btn btn-outline-secondary">Añadir contaminante</button>
+		<button type="submit" class="btn btn-primary">Guardar estación</button>
 	</form>
 	<script>
 	    window.onload = function() {
@@ -48,7 +48,7 @@
 	            }
 	            let new_field_name = `pollutants-${Math.max(...pollutants_inputs_id) + 1}`;
 	            all_pollutants_wrapper.insertAdjacentHTML('beforeend',`
-	            <li id="${new_field_name}"><label for="${new_field_name}">Contaminante</label> <input id="${new_field_name}" name="${new_field_name}" type="text" value="">  <button type="button" onClick="delete_station('${new_field_name}')">Eliminar contaminante</button> </li> 
+	            <li id="${new_field_name}"><label for="${new_field_name}">Contaminante</label> <input id="${new_field_name}" name="${new_field_name}" type="text" value="">  <button type="button" class="btn btn-danger btn-sm"onClick="delete_station('${new_field_name}')">Eliminar contaminante</button> </li> 
 	            `);
 	        });
 	    }

@@ -10,11 +10,14 @@ from botocore.exceptions import ClientError
 import json
 import pandas as pd
 import numpy as np
+from flask_bootstrap import Bootstrap
 
 from decimal import Decimal
 
 dynamodb = boto3.resource('dynamodb')
 stations_table = dynamodb.Table('Estaciones')
+
+Bootstrap(app)
 
 #DECORATORS
 @app.route('/')

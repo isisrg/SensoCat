@@ -12,10 +12,8 @@
 	<form action="" method="post" enctype="multipart/form-data">
 		<p>Selecciona que tipo de datos se van a subir:<p>
 			{% for subfield in form.data_type %}
-				<p>
-					{{ subfield }}
-					{{ subfield.label }}
-				</p>
+				{{ subfield }}
+				{{ subfield.label }} <br>
 			{% endfor %}
 			{% for error in form.data_type.errors %}
 				<span style="color:red;">[{{ error }}]</span>
@@ -23,7 +21,7 @@
 		<p> Selecciona el archivo a subir:
 			{{ form.file }}
 			<br>
-			<input type="submit" value="Subir">
+			<input type="submit" class="btn btn-primary" value="Subir">
 		</p>
 	</form>
 {% endblock %}
