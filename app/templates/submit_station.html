@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% block navbar %}
+    <a class="nav-link" aria-current="page" href="{{ url_for('home') }}">Inicio</a>
+    <a class="nav-link active" href="{{ url_for('upload') }}">Subir archivo</a>
+    <a class="nav-link" href="{{ url_for('new_station') }}">Nueva estación</a>
+    <a class="nav-link" href="{{ url_for('about') }}">Sobre nosotros</a>
+{% endblock %}
+
 {% block content %}
 	<h2> Nueva estación creada </h2>
     La estación con los siguientes valores se ha creado correctamente <br>

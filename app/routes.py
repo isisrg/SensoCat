@@ -54,12 +54,22 @@ def upload():
     if request.method == 'POST':
         data_type = form.data_type.data
         locations_csv = form.file.data
+        file_name = locations_csv.filename.split('.')[0]
+        print(file_name)
         df = pd.read_csv(locations_csv, delimiter=';')
         if data_type == 'stations':
             #df.insert(0, 'Id', np.arange(start=1, stop=len(df)+1, step=1))
             table = 'Estaciones'
+            mode = 0
+            #Primero equals 0 if its the first iteration on the Contaminantes column (also indicates wether the Contaminantes column exists or not)
+            primero = 0
+
+        if data_type == 'reports-captor':
+            df.insert(0, 'Nombre', file_name)
+            table = 'Informes'
             mode = 1
-        if data_type == 'reports':
+        if data_type == 'reports-ref':
+            df.insert(0, 'Nombre', file_name)
             table = 'Informes'
             mode = 2
 
@@ -70,9 +80,20 @@ def upload():
         #Number of columns of the csv
         col_size = df.shape[1]
 
+        dynamodb = boto3.resource('dynamodb')
+        #Indicates which table is going to be used
+        selected_table = dynamodb.Table(table)
+
         for count_row in range(0, row_size):
             for count_col in range(0, col_size):
                 row_values = df.iloc[count_row,:].values
+                
+                # if str(header[count_col]) == 'Contaminantes' and mode == 0:
+                    # pollutants = row_values[count_col].split(',')
+                    
+                if str(header[count_col]) == 'date':
+                    header[count_col] = 'Timestamp'
+
                 #If the data is from a captor the date format is changed taking the seconds out
                 if str(header[count_col]) == 'Timestamp' and mode == 1:
                     old_date = str(row_values[count_col])
@@ -86,18 +107,18 @@ def upload():
                     date = datetime.strptime(f'{old_date}', '%Y-%m-%dT%H:%M')
                     new_date = date.strftime('%d/%m/%Y %H:%M')
                     row_values[count_col] = str(new_date)
-                
+
                 if count_col == 0:
+                    #if str(header[count_col]) == 'Contaminantes' and mode == 0:   
                     data_json = '{"' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'     
                 else:
                     data_json += ', "' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'
 
             data_json += '}'
+            print(data_json)
             #Data converted to JSON format
             converted_data = json.loads(data_json)
-            dynamodb = boto3.resource('dynamodb')
-            #Indicates which table is going to be used
-            selected_table = dynamodb.Table(table)
+            print(converted_data)
             selected_table.put_item(Item=converted_data)
 
     return render_template('upload.html', title='Subir archivo', form=form)
@@ -110,68 +131,72 @@ def new_station():
             return render_template('submit_station.html', title='Nueva estación', form_new_station=form_new_station)
     return render_template('new_station.html', title='Nueva estación', form_new_station=form_new_station)
 
-@app.route('/submit_station', methods=['GET', 'POST'])
+@app.route('/new_station/submit_station', methods=['GET', 'POST'])
 def submit_station():
-    form_new_station = NewStationForm()
 
-    dynamodb = boto3.resource('dynamodb')
-    table = dynamodb.Table('Estaciones')
-    #Returns all of the table's data
-    table_data = table.scan()
-    #Returns the items from the data collected and saves it into pandas
-    items_data = pd.DataFrame(table_data['Items'])
+    if request.method == 'GET':
+        return redirect('/new_station')
+        
+    if request.method == 'POST':
+        form_new_station = NewStationForm()
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table('Estaciones')
+        #Returns all of the table's data
+        table_data = table.scan()
+        #Returns the items from the data collected and saves it into pandas
+        items_data = pd.DataFrame(table_data['Items'])
 
-    #Header values
-    header = items_data.columns.values
-    #Number of rows of the csv
-    row_size = items_data.shape[0]
-    #Number of columns of the csv
-    col_size = items_data.shape[1]
+        #Header values
+        header = items_data.columns.values
+        #Number of rows of the csv
+        row_size = items_data.shape[0]
+        #Number of columns of the csv
+        col_size = items_data.shape[1]
 
-    #Primero equals 0 if its the first iteration on the Contaminantes column (also indicates wether the Contaminantes column exists or not)
-    primero = 0
+        #Primero equals 0 if its the first iteration on the Contaminantes column (also indicates wether the Contaminantes column exists or not)
+        primero = 0
 
-    for count_col in range(0, col_size):  
-        if header[count_col] == 'Longitud': data = form_new_station.longitude.data
-        if header[count_col] == 'Latitud': data = form_new_station.latitude.data
-        if header[count_col] == 'Nombre': data = form_new_station.name.data
-        if header[count_col] == 'Contaminantes': data = form_new_station.pollutants.data
+        for count_col in range(0, col_size):  
+            if header[count_col] == 'Longitud': data = form_new_station.longitude.data
+            if header[count_col] == 'Latitud': data = form_new_station.latitude.data
+            if header[count_col] == 'Nombre': data = form_new_station.name.data
+            if header[count_col] == 'Contaminantes': data = form_new_station.pollutants.data
 
-        if count_col == 0:
-            data_json = '{"' + str(header[count_col]) + '": "' + str(data) + '"'      
-        else:
-            if header[count_col] == 'Contaminantes':
-                data_json += ', "' + str(header[count_col]) + '": ['
-                for nested in form_new_station.pollutants.entries:
-                    if primero == 0:
-                        data_json += '"' + str(nested.data) + '"'
-                        primero = 1
-                    else:
-                        data_json += ', "' + str(nested.data) + '"'
-                data_json += ']'
+            if count_col == 0:
+                data_json = '{"' + str(header[count_col]) + '": "' + str(data) + '"'      
             else:
-                data_json += ', "' + str(header[count_col]) + '": "' + str(data) + '"'
+                if header[count_col] == 'Contaminantes':
+                    data_json += ', "' + str(header[count_col]) + '": ['
+                    for nested in form_new_station.pollutants.entries:
+                        if primero == 0:
+                            data_json += '"' + str(nested.data) + '"'
+                            primero = 1
+                        else:
+                            data_json += ', "' + str(nested.data) + '"'
+                    data_json += ']'
+                else:
+                    data_json += ', "' + str(header[count_col]) + '": "' + str(data) + '"'
 
-    #If Contaminantes column does not exists then creates one with the data specified by the user in the form
-    if primero == 0:
-        data_json += ', "Contaminantes": ['
-        for nested in form_new_station.pollutants.entries:
-            if primero == 0:
-                data_json += '"' + str(nested.data) + '"'
-                primero = 1
-            else:
-                data_json += ', "' + str(nested.data) + '"'
-        data_json += ']'
+        #If Contaminantes column does not exists then creates one with the data specified by the user in the form
+        if primero == 0:
+            data_json += ', "Contaminantes": ['
+            for nested in form_new_station.pollutants.entries:
+                if primero == 0:
+                    data_json += '"' + str(nested.data) + '"'
+                    primero = 1
+                else:
+                    data_json += ', "' + str(nested.data) + '"'
+            data_json += ']'
 
-    #print(str(form_new_station.pollutants.data))
-    #print(len(form_new_station.pollutants.data))
+        #print(str(form_new_station.pollutants.data))
+        #print(len(form_new_station.pollutants.data))
 
-    data_json += '}'
-    print(data_json)
-    #Data converted to JSON format
-    converted_data = json.loads(data_json)
-    dynamodb = boto3.resource('dynamodb')
-    #Indicates which table is going to be used
-    selected_table = dynamodb.Table('Estaciones')
-    selected_table.put_item(Item=converted_data)
-    return render_template('submit_station.html', title='Estación', form_new_station=form_new_station)
+        data_json += '}'
+        print(data_json)
+        #Data converted to JSON format
+        converted_data = json.loads(data_json)
+        dynamodb = boto3.resource('dynamodb')
+        #Indicates which table is going to be used
+        selected_table = dynamodb.Table('Estaciones')
+        selected_table.put_item(Item=converted_data)
+        return render_template('submit_station.html', title='Estación', form_new_station=form_new_station)
