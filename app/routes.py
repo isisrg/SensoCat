@@ -1,3 +1,4 @@
+from crypt import methods
 from flask import render_template, flash, redirect, request
 from app import app
 from app.forms import LoginForm, UploadForm, NewStationForm
@@ -49,9 +50,17 @@ def about():
 def upload():
     form = UploadForm()
     if form.validate_on_submit():
+        if request.method == 'POST':
+            return render_template('submit_csv.html', title='Subir archivo', form=form)
+    return render_template('upload.html', title='Subir archivo', form=form)
+
+@app.route('/upload/submit_csv', methods=['GET', 'POST'])
+def submit_csv():
+    if request.method == 'GET':
         return redirect('/upload')
 
     if request.method == 'POST':
+        form = UploadForm()
         data_type = form.data_type.data
         locations_csv = form.file.data
         file_name = locations_csv.filename.split('.')[0]
@@ -121,7 +130,7 @@ def upload():
             print(converted_data)
             selected_table.put_item(Item=converted_data)
 
-    return render_template('upload.html', title='Subir archivo', form=form)
+        return render_template('submit_csv.html', title='Subir archivo', form=form)
 
 @app.route('/new_station', methods=['GET', 'POST'])
 def new_station():

@@ -2,8 +2,8 @@
 
 {% block navbar %}
     <a class="nav-link" aria-current="page" href="{{ url_for('home') }}">Inicio</a>
-    <a class="nav-link active" href="{{ url_for('upload') }}">Subir archivo</a>
-    <a class="nav-link" href="{{ url_for('new_station') }}">Nueva estación</a>
+    <a class="nav-link" href="{{ url_for('upload') }}">Subir archivo</a>
+    <a class="nav-link active" href="{{ url_for('new_station') }}">Nueva estación</a>
     <a class="nav-link" href="{{ url_for('about') }}">Sobre nosotros</a>
 {% endblock %}
 
@@ -28,5 +28,5 @@
 			{{ nested.data }}		
 		</li>
 	{% endfor %}
-	<button><a href="{{ url_for('upload') }}">Subir archivo</a></button>
+	<a href="{{ url_for('upload') }}"><button type="button" class="btn btn-primary">Subir archivo</button></a>
 {% endblock %}
