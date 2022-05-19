@@ -77,6 +77,7 @@ def submit_csv():
             df.insert(0, 'Nombre', file_name)
             table = 'Informes'
             mode = 1
+
         if data_type == 'reports-ref':
             df.insert(0, 'Nombre', file_name)
             table = 'Informes'
@@ -89,46 +90,65 @@ def submit_csv():
         #Number of columns of the csv
         col_size = df.shape[1]
 
-        dynamodb = boto3.resource('dynamodb')
-        #Indicates which table is going to be used
-        selected_table = dynamodb.Table(table)
+        #batch counter (module 25)
+        module_count = 0
+
+        # data dictionary
+        csv_data = {}
+
+        if mode == 0:
+            table = dynamodb.Table('Estaciones')
+        if mode == 1 or mode == 2:
+            table = dynamodb.Table('Informes')
 
         for count_row in range(0, row_size):
-            for count_col in range(0, col_size):
-                row_values = df.iloc[count_row,:].values
-                
-                # if str(header[count_col]) == 'Contaminantes' and mode == 0:
-                    # pollutants = row_values[count_col].split(',')
+            with table.batch_writer() as batch:
+                for count_col in range(0, col_size):
+                    row_values = df.iloc[count_row,:].values
+                        
+                    if str(header[count_col]) == 'date':
+                        header[count_col] = 'Timestamp'
+
+                    #If the data is from a captor the date format is changed taking the seconds out
+                    if str(header[count_col]) == 'Timestamp' and mode == 1:
+                        #If the data is from the captor20002, which has the date with a different format from all the other captors, is changed so it stays with the same format as all of the others
+                        if(row_values[0] == 'captor20002'):
+                            old_date = str(row_values[count_col])
+                            date = datetime.strptime(f'{old_date}', '%Y-%m-%d %H:%M:%S')
+                            new_date = date.strftime('%d/%m/%Y %H:%M')
+                            row_values[count_col] = str(new_date)
+
+                        #All the captors excluding the captor20002
+                        else:
+                            old_date = str(row_values[count_col])
+                            date = datetime.strptime(f'{old_date}', '%d/%m/%Y %H:%M:%S')
+                            new_date = date.strftime('%d/%m/%Y %H:%M')
+                            row_values[count_col] = str(new_date)
                     
-                if str(header[count_col]) == 'date':
-                    header[count_col] = 'Timestamp'
+                    #If the data is from a reference station the date format is changed so it stays with the same format as the date in the captors
+                    if str(header[count_col]) == 'Timestamp' and mode == 2:
+                        old_date = str(row_values[count_col])
+                        date = datetime.strptime(f'{old_date}', '%Y-%m-%dT%H:%M')
+                        new_date = date.strftime('%d/%m/%Y %H:%M')
+                        row_values[count_col] = str(new_date)
 
-                #If the data is from a captor the date format is changed taking the seconds out
-                if str(header[count_col]) == 'Timestamp' and mode == 1:
-                    old_date = str(row_values[count_col])
-                    date = datetime.strptime(f'{old_date}', '%d/%m/%Y %H:%M:%S')
-                    new_date = date.strftime('%d/%m/%Y %H:%M')
-                    row_values[count_col] = str(new_date)
-                
-                #If the data is from a reference station the date format is changed so it stays with the same format as the date in the captors
-                if str(header[count_col]) == 'Timestamp' and mode == 2:
-                    old_date = str(row_values[count_col])
-                    date = datetime.strptime(f'{old_date}', '%Y-%m-%dT%H:%M')
-                    new_date = date.strftime('%d/%m/%Y %H:%M')
-                    row_values[count_col] = str(new_date)
+                    csv_data[str(header[count_col])] = str(row_values[count_col])
 
-                if count_col == 0:
-                    #if str(header[count_col]) == 'Contaminantes' and mode == 0:   
-                    data_json = '{"' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'     
-                else:
-                    data_json += ', "' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'
+                batch.put_item(Item=csv_data)
+        
+        # time = ["19/09/2017 13:30", "19/09/2017 14:00", "19/09/2017 15:00"]
+        # o3 = ["476.0723", "447.0963", "544.6941"]
 
-            data_json += '}'
-            print(data_json)
-            #Data converted to JSON format
-            converted_data = json.loads(data_json)
-            print(converted_data)
-            selected_table.put_item(Item=converted_data)
+        # test_table = dynamodb.Table('Informes-test')
+        # with test_table.batch_writer() as batch:
+        #     for i in range(3):
+        #         batch.put_item(
+        #             Item={
+        #                 'Nombre': 'captor17005',
+        #                 'Timestamp': time[i],
+        #                 'o3_mox_s1': o3[i]
+        #             }
+        #         )
 
         return render_template('submit_csv.html', title='Subir archivo', form=form)
 
