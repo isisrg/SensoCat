@@ -90,9 +90,6 @@ def submit_csv():
         #Number of columns of the csv
         col_size = df.shape[1]
 
-        #batch counter (module 25)
-        module_count = 0
-
         # data dictionary
         csv_data = {}
 
