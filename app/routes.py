@@ -64,14 +64,11 @@ def submit_csv():
         data_type = form.data_type.data
         locations_csv = form.file.data
         file_name = locations_csv.filename.split('.')[0]
-        print(file_name)
         df = pd.read_csv(locations_csv, delimiter=';')
         if data_type == 'stations':
             #df.insert(0, 'Id', np.arange(start=1, stop=len(df)+1, step=1))
             table = 'Estaciones'
             mode = 0
-            #Primero equals 0 if its the first iteration on the Contaminantes column (also indicates wether the Contaminantes column exists or not)
-            primero = 0
 
         if data_type == 'reports-captor':
             df.insert(0, 'Nombre', file_name)
@@ -105,6 +102,10 @@ def submit_csv():
                         
                     if str(header[count_col]) == 'date':
                         header[count_col] = 'Timestamp'
+                    
+                    if str(header[count_col]) == 'Sensores' and mode == 0:
+                        row_values[count_col] = str(row_values[count_col])
+                        row_values[count_col] = row_values[count_col].split(",")
 
                     #If the data is from a captor the date format is changed taking the seconds out
                     if str(header[count_col]) == 'Timestamp' and mode == 1:
@@ -130,22 +131,7 @@ def submit_csv():
                         row_values[count_col] = str(new_date)
 
                     csv_data[str(header[count_col])] = str(row_values[count_col])
-
                 batch.put_item(Item=csv_data)
-        
-        # time = ["19/09/2017 13:30", "19/09/2017 14:00", "19/09/2017 15:00"]
-        # o3 = ["476.0723", "447.0963", "544.6941"]
-
-        # test_table = dynamodb.Table('Informes-test')
-        # with test_table.batch_writer() as batch:
-        #     for i in range(3):
-        #         batch.put_item(
-        #             Item={
-        #                 'Nombre': 'captor17005',
-        #                 'Timestamp': time[i],
-        #                 'o3_mox_s1': o3[i]
-        #             }
-        #         )
 
         return render_template('submit_csv.html', title='Subir archivo', form=form)
 
