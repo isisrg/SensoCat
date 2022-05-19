@@ -28,7 +28,7 @@ def home():
     table_data = stations_table.scan()
     #Returns the items from the data collected and saves it into pandas
     items_data = pd.DataFrame(table_data['Items'])
-    #print(items_data)
+    # print(items_data)
     items_data=items_data.values.tolist()
     return render_template('home.html', title='Home', items_data=json.dumps(items_data))
 
@@ -87,25 +87,21 @@ def submit_csv():
         #Number of columns of the csv
         col_size = df.shape[1]
 
-        # data dictionary
-        csv_data = {}
-
-        if mode == 0:
-            table = dynamodb.Table('Estaciones')
-        if mode == 1 or mode == 2:
-            table = dynamodb.Table('Informes')
+        dynamodb = boto3.resource('dynamodb')
+        #Indicates which table is going to be used
+        selected_table = dynamodb.Table(table)
 
         for count_row in range(0, row_size):
-            with table.batch_writer() as batch:
+            # with table.batch_writer() as batch:
                 for count_col in range(0, col_size):
                     row_values = df.iloc[count_row,:].values
                         
                     if str(header[count_col]) == 'date':
                         header[count_col] = 'Timestamp'
                     
-                    if str(header[count_col]) == 'Sensores' and mode == 0:
-                        row_values[count_col] = str(row_values[count_col])
-                        row_values[count_col] = row_values[count_col].split(",")
+                    # if str(header[count_col]) == 'Sensores' and mode == 0:
+                    #     row_values[count_col] = str(row_values[count_col])
+                    #     row_values[count_col] = row_values[count_col].split(",")
 
                     #If the data is from a captor the date format is changed taking the seconds out
                     if str(header[count_col]) == 'Timestamp' and mode == 1:
@@ -130,8 +126,17 @@ def submit_csv():
                         new_date = date.strftime('%d/%m/%Y %H:%M')
                         row_values[count_col] = str(new_date)
 
-                    csv_data[str(header[count_col])] = str(row_values[count_col])
-                batch.put_item(Item=csv_data)
+                    if count_col == 0: 
+                        data_json = '{"' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'     
+                    else:
+                        data_json += ', "' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'
+                
+                data_json += '}'
+                print(data_json)
+                #Data converted to JSON format
+                converted_data = json.loads(data_json)
+                print(converted_data)
+                selected_table.put_item(Item=converted_data)
 
         return render_template('submit_csv.html', title='Subir archivo', form=form)
 
