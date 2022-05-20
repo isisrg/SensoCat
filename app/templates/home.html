@@ -26,76 +26,85 @@ crossorigin=""></script>
     <script src="http://leafletjs.com/dist/leaflet.js"></script>
     <div id="map" class="map map-home" style="margin:12px 0 12px 0;height:600px;"></div>
 
-        <script>
-            var map = L.map('map').setView([41.39238915483426, 2.1621599834744623], 11);
-            mapLink =
-                '<a href="http://openstreetmap.org">OpenStreetMap</a>';
-            L.tileLayer(
-                'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; ' + mapLink + ' Contributors',
-                    maxZoom: 18,
-                }).addTo(map);
+    <script>
+      var map = L.map('map').setView([41.8204600, 1.8676800], 9);
+      mapLink = '<a href="http://openstreetmap.org">OpenStreetMap</a>';
+      L.tileLayer(
+        'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; ' + mapLink + ' Contributors',
+            maxZoom: 18,
+        }).addTo(map);
 
-            //items_data takes the list of stations and its information from routes (in python) and parses it to js
-            var items_data = {{ items_data|safe }}
-            //Places all the pins in the map
-            /*for (var count_row = 0; count_row < items_data.length; count_row++) {
-                marker = new L.marker([items_data[count_row][1], items_data[count_row][0]])
-                    .bindPopup(items_data[count_row][2] + "<br /> " +"<a href={{ url_for('modal') }}>Más información</a>")
-                    .addTo(map)
-                    .openPopup()
-            }*/
-            
-            for (var count_row = 0; count_row < items_data.length; count_row++){
-              marker = new L.marker([items_data[count_row][2], items_data[count_row][1]])
-                  .bindPopup(items_data[count_row][3] + "<br /> " + '<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="' +items_data[count_row][2]+ '">Más información</button>')
-                  .addTo(map)
-                  .openPopup()
-            }
-        </script>
+      //items_data takes the list of stations and its information from routes (in python) and parses it to js
+      var items_data = {{ items_data|safe }}
+      //Places all the pins in the map
+      /*for (var count_row = 0; count_row < items_data.length; count_row++) {
+          marker = new L.marker([items_data[count_row][1], items_data[count_row][0]])
+              .bindPopup(items_data[count_row][2] + "<br /> " +"<a href={{ url_for('modal') }}>Más información</a>")
+              .addTo(map)
+              .openPopup()
+      }*/
+      
+      for (var count_row = 0; count_row < items_data.length; count_row++){
+        marker = new L.marker([items_data[count_row][2], items_data[count_row][1]])
+            .bindPopup(items_data[count_row][3] + "<br /> " + '<button type="button" class="btn btn-primary preview-select" id="preview-select" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="' +items_data[count_row]+ '">Más información</button>')
+            .addTo(map)
+            .openPopup()
+      }
+    </script>
 
-        <!-- Modal -->
-        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-          <div class="modal-dialog">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Estación:</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <!--form-->
-                  <div class="mb-3">
-                    <label for="recipient-name" class="col-form-label">Recipient:</label>
-                    <input type="text" class="form-control" id="recipient-name">
-                  </div>
-                <!--/form-->
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary">Send message</button>
-              </div>
-            </div>
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">Estación:</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <select id="selector" onchange="handleSelectorChange(this)" class="form-select btn-secondary" aria-label="Default select example">
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Send message</button>
           </div>
         </div>
+      </div>
+    </div>
 
-        <script>
-          var exampleModal = document.getElementById('exampleModal')
-          exampleModal.addEventListener('show.bs.modal', function (event) {
-            // Button that triggered the modal
-            var button = event.relatedTarget
-            // Extract info from data-bs-* attributes
-            var recipient = button.getAttribute('data-bs-whatever')
-            // If necessary, you could initiate an AJAX request here
-            // and then do the updating in a callback.
-            //
-            // Update the modal's content.
-            var modalTitle = exampleModal.querySelector('.modal-title')
-            var modalBodyInput = exampleModal.querySelector('.modal-body input')
+    <script>
+      var exampleModal = document.getElementById('exampleModal')
+      exampleModal.addEventListener('show.bs.modal', function (event) {
+        // Button that triggered the modal
+        var button = event.relatedTarget
+        // Extract info from data-bs-* attributes
+        var recipient = button.getAttribute('data-bs-whatever')
+        // If necessary, you could initiate an AJAX request here
+        // and then do the updating in a callback.
+        //
+        // Update the modal's content.
+        recipient = recipient.split(",")
+        var station_name = recipient[recipient.length-1]
+        console.log(recipient)
 
-            modalTitle.textContent = 'Estación ' + recipient
-            modalBodyInput.value = recipient
-          })
-      </script>
+
+        var modalTitle = exampleModal.querySelector('.modal-title')
+        var modalBodyInput = exampleModal.querySelector('.modal-body input')
+
+        modalTitle.textContent = 'Estación ' + station_name
+        var selector = document.querySelector("#selector");
+        selector.innerHTML = '';
+        var options = recipient.slice(0, recipient.length - 3);
+        options.map(option =>{ 
+          var select = document.createElement('option');
+          select.value = option;
+          select.text = option;
+          selector.appendChild(select);
+        })
+      })
+
+    </script>
       
         <!-- {% block modal %}{% endblock %} -->
     </div>

@@ -23,3 +23,6 @@ class NewStationForm(FlaskForm):
 	longitude = StringField('Longitud', validators=[DataRequired()])
 	pollutants = FieldList(StringField('Contaminante', validators=[DataRequired()]), min_entries=1, max_entries=5)
 
+#A MEDIO HACER, PONER DROPDOWN LIST Y DOS CALENDARIOS CON FECHAS VALIDADAS?
+class SelectSensorAndTimestamp(FlaskForm):
+	sensors = SelectField('Sensores', validators=[DataRequired()])

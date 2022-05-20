@@ -1,4 +1,6 @@
 from crypt import methods
+from itertools import count
+from typing import final
 from flask import render_template, flash, redirect, request
 from app import app
 from app.forms import LoginForm, UploadForm, NewStationForm
@@ -69,6 +71,8 @@ def submit_csv():
             #df.insert(0, 'Id', np.arange(start=1, stop=len(df)+1, step=1))
             table = 'Estaciones'
             mode = 0
+            starting_date = ''
+            final_date = ''
 
         if data_type == 'reports-captor':
             df.insert(0, 'Nombre', file_name)
@@ -130,13 +134,31 @@ def submit_csv():
                         data_json = '{"' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'     
                     else:
                         data_json += ', "' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'
-                
+
+                    if str(header[count_col]) == 'Timestamp' and mode == 1 or mode == 2:
+                        new_date = datetime.strptime(f'{new_date}', '%d/%m/%Y %H:%M')
+                        if count_row == 0 and mode == 1 or mode == 2:
+                            starting_date = new_date
+                            final_date = new_date
+                            print('tonnta')
+                        if mode == 1 or mode == 1 or mode == 2:
+                            if new_date > final_date:
+                                final_date = new_date
+                            if new_date < starting_date:
+                                starting_date = new_date
+
+                        print('Starting date:' +starting_date.strftime('%d/%m/%Y %H:%M'))
+                        print('Final date: ' +final_date.strftime('%d/%m/%Y %H:%M'))
+                    
                 data_json += '}'
-                print(data_json)
+                # print(data_json)
                 #Data converted to JSON format
                 converted_data = json.loads(data_json)
-                print(converted_data)
+                # print(converted_data)
                 selected_table.put_item(Item=converted_data)
+
+                # print('Starting date:' +starting_date)
+                # print('Final date: ' +final_date)
 
         return render_template('submit_csv.html', title='Subir archivo', form=form)
 
