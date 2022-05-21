@@ -1,5 +1,7 @@
+from calendar import c
 from crypt import methods
 from itertools import count
+from turtle import circle
 from typing import final
 from flask import render_template, flash, redirect, request
 from app import app
@@ -7,6 +9,7 @@ from app.forms import LoginForm, UploadForm, NewStationForm
 
 from distutils.file_util import move_file
 import boto3
+from boto3.dynamodb.conditions import Key
 from datetime import datetime
 from pprint import pprint
 from botocore.exceptions import ClientError
@@ -19,6 +22,7 @@ from decimal import Decimal
 
 dynamodb = boto3.resource('dynamodb')
 stations_table = dynamodb.Table('Estaciones')
+reports_table = dynamodb.Table('Informes')
 
 Bootstrap(app)
 
@@ -31,8 +35,61 @@ def home():
     #Returns the items from the data collected and saves it into pandas
     items_data = pd.DataFrame(table_data['Items'])
     # print(items_data)
+
+    #Header values
+    header = items_data.columns.values
+    header = header.tolist()
+    name_index = header.index('Nombre')
+    latitude_index = header.index('Latitud')
+    longitude_index = header.index('Longitud')
+    sensor_index = header.index('Sensores')
+    print('Name index: ', name_index, ' Latitude index: ', latitude_index, ' Longitude index: ', longitude_index, ' Sensor index: ', sensor_index)
+    print('HEADER: ', header)
+
+    #Number of rows of the csv
+    row_size = items_data.shape[0]
+    #Number of columns of the csv
+    col_size = items_data.shape[1]
+
+    for count_row in range(0, row_size):
+        station_name = items_data.iloc[count_row,:].values[name_index]
+        initial_date = reports_table.query(
+            Limit = 1,
+            # TRUE -> el más grande FALSE -> el más pequeño
+            ScanIndexForward = True,
+            KeyConditionExpression=Key('Nombre').eq(station_name)
+        )
+        initial_date = initial_date['Items']
+
+        final_date = reports_table.query(
+            Limit = 1,
+            # TRUE -> el más grande FALSE -> el más pequeño
+            ScanIndexForward = False,
+            KeyConditionExpression=Key('Nombre').eq(station_name)
+        )
+        final_date = final_date['Items']
+
+        if initial_date and final_date:
+            initial_date = initial_date[0]['Timestamp']
+            final_date = final_date[0]['Timestamp']
+            print('Station: ', station_name, ' Initial date: ', initial_date, ' Final date: ', final_date)
+
+            # stations_table.update_item(
+            #     Key={'Nombre': str(station_name)},
+            #     AttributeUpdates={
+            #         'Fecha inicio': str(initial_date),
+            #         'Fecha fin': str(final_date)
+            #     },
+            # )
+            # test = '{"Nombre": "' +str(station_name)+ '", "Fecha inicio": "' +str(initial_date)+ '", "Fecha fin": "' +str(final_date)+ '"}'
+            # print(test)
+            # converted_data = json.loads(test)
+            # print(converted_data)
+            # stations_table.put_item(Item=converted_data)
+
+        print(station_name)
     items_data=items_data.values.tolist()
-    return render_template('home.html', title='Home', items_data=json.dumps(items_data))
+    return render_template('home.html', title='Home', items_data=json.dumps(items_data), name_index=name_index, latitude_index=latitude_index, longitude_index=longitude_index)
 
 @app.route('/home/modal')
 def modal():
@@ -71,8 +128,8 @@ def submit_csv():
             #df.insert(0, 'Id', np.arange(start=1, stop=len(df)+1, step=1))
             table = 'Estaciones'
             mode = 0
-            starting_date = ''
-            final_date = ''
+            # initial_date = ''
+            # final_date = ''
 
         if data_type == 'reports-captor':
             df.insert(0, 'Nombre', file_name)
@@ -90,75 +147,123 @@ def submit_csv():
         row_size = df.shape[0]
         #Number of columns of the csv
         col_size = df.shape[1]
+        #Index of the attribute 'Nombre'
+        name_index = header.tolist()
+        name_index = name_index.index('Nombre')
 
         dynamodb = boto3.resource('dynamodb')
         #Indicates which table is going to be used
         selected_table = dynamodb.Table(table)
 
         for count_row in range(0, row_size):
+            print(count_row)
+            station_name = df.iloc[count_row,:].values[name_index]
             # with table.batch_writer() as batch:
-                for count_col in range(0, col_size):
-                    row_values = df.iloc[count_row,:].values
-                        
-                    if str(header[count_col]) == 'date':
-                        header[count_col] = 'Timestamp'
+            for count_col in range(0, col_size):
+                row_values = df.iloc[count_row,:].values
                     
-                    # if str(header[count_col]) == 'Sensores' and mode == 0:
-                    #     row_values[count_col] = str(row_values[count_col])
-                    #     row_values[count_col] = row_values[count_col].split(",")
+                if str(header[count_col]) == 'date':
+                    header[count_col] = 'Timestamp'
+                
+                # if str(header[count_col]) == 'Sensores' and mode == 0:
+                #     row_values[count_col] = str(row_values[count_col])
+                #     row_values[count_col] = row_values[count_col].split(",")
 
-                    #If the data is from a captor the date format is changed taking the seconds out
-                    if str(header[count_col]) == 'Timestamp' and mode == 1:
-                        #If the data is from the captor20002, which has the date with a different format from all the other captors, is changed so it stays with the same format as all of the others
-                        if(row_values[0] == 'captor20002'):
-                            old_date = str(row_values[count_col])
-                            date = datetime.strptime(f'{old_date}', '%Y-%m-%d %H:%M:%S')
-                            new_date = date.strftime('%d/%m/%Y %H:%M')
-                            row_values[count_col] = str(new_date)
+                # if str(header[count_col]) == 'Timestamp' and mode == 1 or mode == 2:
+                #     old_date = str(row_values[count_col])
+                #     date = datetime.strptime(f'{old_date}', '%Y-%m-%dT%H:%M:%S')
+                #     new_date = date.strftime('%d/%m/%Y %H:%M')
+                #     row_values[count_col] = str(new_date)
 
-                        #All the captors excluding the captor20002
-                        else:
-                            old_date = str(row_values[count_col])
-                            date = datetime.strptime(f'{old_date}', '%d/%m/%Y %H:%M:%S')
-                            new_date = date.strftime('%d/%m/%Y %H:%M')
-                            row_values[count_col] = str(new_date)
-                    
-                    #If the data is from a reference station the date format is changed so it stays with the same format as the date in the captors
-                    if str(header[count_col]) == 'Timestamp' and mode == 2:
+                # if mode == 0:
+                #     if str(header[count_col]) == 'Fecha-inicio':
+                #         reports = reports_table.query(
+                #             Limit = 1,
+                #             # TRUE -> el más grande FALSE -> el más pequeño
+                #             ScanIndexForward = True,
+                #             KeyConditionExpression=Key('Nombre').eq(station_name)
+                #         )
+                #         reports = reports['Items']
+                #         if reports:
+                #             initial_date = reports_table.query(
+                #                 Limit = 1,
+                #                 # TRUE -> el más grande FALSE -> el más pequeño
+                #                 ScanIndexForward = True,
+                #                 KeyConditionExpression=Key('Nombre').eq(station_name)
+                #             )
+                #             initial_date = initial_date['Items'][0]['Timestamp']
+                #             row_values[count_col] = str(initial_date)
+
+                #     if str(header[count_col]) == 'Fecha-fin':
+                #         reports = reports_table.query(
+                #             Limit = 1,
+                #             # TRUE -> el más grande FALSE -> el más pequeño
+                #             ScanIndexForward = True,
+                #             KeyConditionExpression=Key('Nombre').eq(station_name)
+                #         )
+                #         reports = reports['Items']
+                #         if reports:
+                #             final_date = reports_table.query(
+                #                 Limit = 1,
+                #                 # TRUE -> el más grande FALSE -> el más pequeño
+                #                 ScanIndexForward = False,
+                #                 KeyConditionExpression=Key('Nombre').eq(station_name)
+                #             )
+                #             final_date = final_date['Items'][0]['Timestamp']
+                #             row_values[count_col] = str(final_date)
+
+                #If the data is from a captor the date format is changed taking the seconds out
+                if str(header[count_col]) == 'Timestamp' and mode == 1:
+                    #If the data is from the captor20002, which has the date with a different format from all the other captors, is changed so it stays with the same format as all of the others
+                    if(row_values[0] == 'captor20002'):
                         old_date = str(row_values[count_col])
-                        date = datetime.strptime(f'{old_date}', '%Y-%m-%dT%H:%M')
-                        new_date = date.strftime('%d/%m/%Y %H:%M')
+                        date = datetime.strptime(f'{old_date}', '%Y-%m-%d %H:%M:%S')
+                        # new_date = date.strftime('%d/%m/%Y %H:%M')
+                        new_date = date.strftime('%Y-%m-%dT%H:%M')
                         row_values[count_col] = str(new_date)
 
-                    if count_col == 0: 
-                        data_json = '{"' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'     
+                    #All the captors excluding the captor20002
                     else:
-                        data_json += ', "' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'
+                        # old_date = str(row_values[count_col])
+                        # date = datetime.strptime(f'{old_date}', '%d/%m/%Y %H:%M:%S')
+                        # new_date = date.strftime('%d/%m/%Y %H:%M')
+                        # row_values[count_col] = str(new_date)
+                        old_date = str(row_values[count_col])
+                        date = datetime.strptime(f'{old_date}', '%d/%m/%Y %H:%M:%S')
+                        new_date = date.strftime('%Y-%m-%dT%H:%M')
+                        row_values[count_col] = str(new_date)
+                
+                #If the data is from a reference station the date format is changed so it stays with the same format as the date in the captors
+                if str(header[count_col]) == 'Timestamp' and mode == 2:
+                    old_date = str(row_values[count_col])
+                    date = datetime.strptime(f'{old_date}', '%Y-%m-%dT%H:%M')
+                    # new_date = date.strftime('%d/%m/%Y %H:%M')
+                    new_date = date.strftime('%Y-%m-%dT%H:%M')
+                    row_values[count_col] = str(new_date)
 
-                    if str(header[count_col]) == 'Timestamp' and mode == 1 or mode == 2:
-                        new_date = datetime.strptime(f'{new_date}', '%d/%m/%Y %H:%M')
-                        if count_row == 0 and mode == 1 or mode == 2:
-                            starting_date = new_date
-                            final_date = new_date
-                            print('tonnta')
-                        if mode == 1 or mode == 1 or mode == 2:
-                            if new_date > final_date:
-                                final_date = new_date
-                            if new_date < starting_date:
-                                starting_date = new_date
+                if count_col == 0: 
+                    data_json = '{"' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'     
+                else:
+                    data_json += ', "' + str(header[count_col]) + '": "' + str(row_values[count_col]) + '"'
 
-                        print('Starting date:' +starting_date.strftime('%d/%m/%Y %H:%M'))
-                        print('Final date: ' +final_date.strftime('%d/%m/%Y %H:%M'))
-                    
-                data_json += '}'
-                # print(data_json)
-                #Data converted to JSON format
-                converted_data = json.loads(data_json)
-                # print(converted_data)
-                selected_table.put_item(Item=converted_data)
+                # if str(header[count_col]) == 'Timestamp' and mode == 1 or mode == 2:
+                #     new_date = datetime.strptime(f'{new_date}', '%d/%m/%Y %H:%M')
+                #     if count_row == 0 and mode == 1 or mode == 2:
+                #         initial_date = new_date
+                #         final_date = new_date
+                #     if mode == 1 or mode == 1 or mode == 2:
+                #         if new_date > final_date:
+                #             final_date = new_date
+                #         if new_date < initial_date:
+                #             initial_date = new_date
 
-                # print('Starting date:' +starting_date)
-                # print('Final date: ' +final_date)
+                #     print('Initial date:' +initial_date.strftime('%d/%m/%Y %H:%M'))
+                #     print('Final date: ' +final_date.strftime('%d/%m/%Y %H:%M'))
+                
+            data_json += '}'
+            #Data converted to JSON format
+            converted_data = json.loads(data_json)
+            selected_table.put_item(Item=converted_data)
 
         return render_template('submit_csv.html', title='Subir archivo', form=form)
 
@@ -226,9 +331,6 @@ def submit_station():
                 else:
                     data_json += ', "' + str(nested.data) + '"'
             data_json += ']'
-
-        #print(str(form_new_station.pollutants.data))
-        #print(len(form_new_station.pollutants.data))
 
         data_json += '}'
         print(data_json)
