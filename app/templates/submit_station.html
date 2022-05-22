@@ -22,7 +22,7 @@
 	{{ form_new_station.longitude.data }}
 	<br>
 
-	{% for nested in form_new_station.pollutants.entries %}
+	{% for nested in form_new_station.sensors.entries %}
 		<li>
 			<b>{{ nested.label }}: </b>
 			{{ nested.data }}		

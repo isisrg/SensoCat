@@ -21,5 +21,6 @@ class NewStationForm(FlaskForm):
 	name = StringField('Nombre', validators=[DataRequired()])
 	latitude = StringField('Latitud', validators=[DataRequired()])
 	longitude = StringField('Longitud', validators=[DataRequired()])
-	pollutants = FieldList(StringField('Contaminante', validators=[DataRequired()]), min_entries=1, max_entries=5)
+	# sensors = FieldList(StringField('Sensor', validators=[DataRequired()]), min_entries=1, max_entries=5)
+	sensors = FieldList(StringField('Sensor', validators=[DataRequired()]), min_entries=1)
 

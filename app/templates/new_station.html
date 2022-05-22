@@ -19,8 +19,8 @@
 		{{ form_new_station.longitude.label }}
 		{{ form_new_station.longitude }}
 		<br>
-		<ul id='pollutants'>
-		{% for nested in form_new_station.pollutants.entries %}
+		<ul id='sensors'>
+		{% for nested in form_new_station.sensors.entries %}
 			<li>
 				{{ nested.label }}
 				{{ nested() }}		
@@ -28,27 +28,27 @@
 		{% endfor %}
 		</ul>
 		<br>
-		<button id="add-pollutant-field" type="button" class="btn btn-outline-secondary">Añadir contaminante</button>
+		<button id="add-sensor-field" type="button" class="btn btn-outline-secondary">Añadir sensor</button>
 		<button type="submit" class="btn btn-primary">Guardar estación</button>
 	</form>
 	<script>
 	    window.onload = function() {
-			let add_pollutant_button = document.getElementById('add-pollutant-field');
-	        add_pollutant_button.addEventListener('click', function(event){
+			let add_sensor_button = document.getElementById('add-sensor-field');
+	        add_sensor_button.addEventListener('click', function(event){
 	            event.preventDefault();
-	            let all_pollutants_wrapper = document.getElementById('pollutants');
-	            let all_pollutants_field = all_pollutants_wrapper.getElementsByTagName('input');
-	            if(all_pollutants_field.length > 4) {
+	            let all_sensors_wrapper = document.getElementById('sensors');
+	            let all_sensors_field = all_sensors_wrapper.getElementsByTagName('input');
+	            /*if(all_sensors_field.length > 4) {
 	                alert('You can  have only five movies name');
 	                return;
+	            }*/
+	            let sensors_inputs_id = []
+	            for(let i = 0; i < all_sensors_field.length; i++) {
+	                sensors_inputs_id.push(parseInt(all_sensors_field[i].name.split('-')[1]));
 	            }
-	            let pollutants_inputs_id = []
-	            for(let i = 0; i < all_pollutants_field.length; i++) {
-	                pollutants_inputs_id.push(parseInt(all_pollutants_field[i].name.split('-')[1]));
-	            }
-	            let new_field_name = `pollutants-${Math.max(...pollutants_inputs_id) + 1}`;
-	            all_pollutants_wrapper.insertAdjacentHTML('beforeend',`
-	            <li id="${new_field_name}"><label for="${new_field_name}">Contaminante</label> <input id="${new_field_name}" name="${new_field_name}" type="text" value="">  <button type="button" class="btn btn-danger btn-sm"onClick="delete_station('${new_field_name}')">Eliminar contaminante</button> </li> 
+	            let new_field_name = `sensors-${Math.max(...sensors_inputs_id) + 1}`;
+	            all_sensors_wrapper.insertAdjacentHTML('beforeend',`
+	            <li id="${new_field_name}"><label for="${new_field_name}">Sensor</label> <input id="${new_field_name}" name="${new_field_name}" type="text" value="">  <button type="button" class="btn btn-danger btn-sm"onClick="delete_station('${new_field_name}')">Eliminar sensor</button> </li> 
 	            `);
 	        });
 	    }

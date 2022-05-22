@@ -2,14 +2,28 @@
 
 {% block map %}
 <!-- LEAFLET -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"/>
+<!--ink rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
 integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
-crossorigin=""/>
+crossorigin=""/-->
 
 <!-- Make sure you put this AFTER Leaflet's CSS -->
-<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+<script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
+<!--script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
 integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
-crossorigin=""></script>
+crossorigin=""></script-->
+  
+<!-- Popperjs -->
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.2/dist/umd/popper.min.js"
+      crossorigin="anonymous"></script>
+<!-- Tempus Dominus JavaScript -->
+<script src="https://cdn.jsdelivr.net/gh/Eonasdan/tempus-dominus@master/dist/js/tempus-dominus.js"
+      crossorigin="anonymous"></script>
+
+<!-- Tempus Dominus Styles -->
+<link href="https://cdn.jsdelivr.net/gh/Eonasdan/tempus-dominus@master/dist/css/tempus-dominus.css"
+      rel="stylesheet" crossorigin="anonymous">
+
 {% endblock %}
 
 {% block navbar %}
@@ -20,11 +34,12 @@ crossorigin=""></script>
 {% endblock %}
 
 {% block content %}
-	<h1> ¡Bienvenido a SensoCat! </h1>
+	<!-- h1> ¡Bienvenido a SensoCat! </h1-->
     <div class="map" class="container py-4">
     <!-- carga mas lento el mapa ->  <script src="https://onpkg.com/leaflet@1.0.3/dist/leaflet.js"></script> -->
     <script src="http://leafletjs.com/dist/leaflet.js"></script>
-    <div id="map" class="map map-home" style="margin:12px 0 12px 0;height:600px;"></div>
+    <!-- style margin [top, right, bottom, left]-->
+    <div id="map" class="map map-home" style="margin: 0px 0px 0px 0px;height:94vh;"></div>
 
     <script>
       var map = L.map('map').setView([41.8204600, 1.8676800], 9);
@@ -48,10 +63,11 @@ crossorigin=""></script>
               .addTo(map)
               .openPopup()
       }*/
-      
+      console.log(items_data)
       for (var count_row = 0; count_row < items_data.length; count_row++){
+        console.log('Nombre: ', items_data[count_row][name_index], ' Latitud: ', items_data[count_row][latitude_index], ' Longitude: ', items_data[count_row][longitude_index])
         marker = new L.marker([items_data[count_row][latitude_index], items_data[count_row][longitude_index]])
-            .bindPopup(items_data[count_row][name_index] + "<br /> " + '<button type="button" class="btn btn-primary preview-select" id="preview-select" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="' +items_data[count_row]+ '">Más información</button>')
+            .bindPopup(items_data[count_row][name_index] + "<br /> " + '<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="' +items_data[count_row]+ '">Más información</button>')
             .addTo(map)
             .openPopup()
       }
@@ -66,12 +82,12 @@ crossorigin=""></script>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <select id="selector" onchange="handleSelectorChange(this)" class="form-select btn-secondary" aria-label="Default select example">
-            </select>
+            Escoja un sensor:
+            <select id="selector" onchange="handleSelectorChange(this)" class="form-select" aria-label="Default select example"></select>
           </div>
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-primary">Send message</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            <button type="button" class="btn btn-primary">Ver datos</button>
           </div>
         </div>
       </div>
@@ -109,7 +125,7 @@ crossorigin=""></script>
         })
       })
     </script>
-      
+
         <!-- {% block modal %}{% endblock %} -->
     </div>
 
