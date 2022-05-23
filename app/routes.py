@@ -1,25 +1,29 @@
-from calendar import c
-from crypt import methods
-from itertools import count
-from turtle import circle
-from typing import final
-from flask import render_template, flash, redirect, request
-from app import app
-from app.forms import LoginForm, UploadForm, NewStationForm
+#Creates the application object as an instance of class Flask imported from the flask package
+from flask import Flask
 
-from distutils.file_util import move_file
+# FLASK
+from flask import render_template, redirect, request
+#APP
+from app import app
+from app.forms import UploadForm, NewStationForm
+#BOTO3
 import boto3
 from boto3.dynamodb.conditions import Key
-from datetime import datetime
-from pprint import pprint
 from botocore.exceptions import ClientError
-import json
+#UTILITIES
+from flask_bootstrap import Bootstrap
 import pandas as pd
 import numpy as np
-from flask_bootstrap import Bootstrap
+import json
+from datetime import datetime
 
-from decimal import Decimal
 
+# from itertools import count
+# from turtle import circle
+# from typing import final
+# from distutils.file_util import move_file
+
+#DYNAMODB connection and tables
 dynamodb = boto3.resource('dynamodb')
 stations_table = dynamodb.Table('Estaciones')
 reports_table = dynamodb.Table('Informes')
@@ -28,6 +32,7 @@ Bootstrap(app)
 
 #DECORATORS
 @app.route('/')
+
 @app.route('/home')
 def home():
     #Returns all of the table's data
@@ -89,7 +94,7 @@ def home():
 
         print(station_name)
     items_data=items_data.values.tolist()
-    return render_template('home.html', title='Home', items_data=json.dumps(items_data), name_index=name_index, latitude_index=latitude_index, longitude_index=longitude_index)
+    return render_template('home.html', title='Inicio', items_data=json.dumps(items_data), name_index=name_index, latitude_index=latitude_index, longitude_index=longitude_index)
 
 @app.route('/home/modal')
 def modal():
@@ -101,9 +106,10 @@ def modal():
     items_data=items_data.values.tolist()
     return render_template('modal.html', title='Home', items_data=json.dumps(items_data))
 
-@app.route('/home/')
-def info():
-    return render_template('info.html', title='')
+@app.route('/home/chart_table/<station_name>/<initial_date>/<final_date>', methods=['GET', 'POST'])
+def chart_table(station_name, initial_date, final_date):
+
+    return render_template('chart_table.html', title='Información', station_name=station_name, initial_date = initial_date, final_date = final_date)
 
 @app.route('/about')
 def about():
@@ -363,3 +369,11 @@ def submit_station():
         selected_table = dynamodb.Table('Estaciones')
         selected_table.put_item(Item=converted_data)
         return render_template('submit_station.html', title='Estación', form_new_station=form_new_station)
+
+
+@app.route('/index')
+def index():
+    return render_template('index.html')
+
+if __name__ == '__main__':
+    app.run()

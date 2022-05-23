@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block navbar %}
+    <a class="nav-link" href="{{ url_for('home') }}">Inicio</a>
+    <a class="nav-link" href="{{ url_for('upload') }}">Subir archivo</a>
+    <a class="nav-link" href="{{ url_for('new_station') }}">Nueva estación</a>
+    <a class="nav-link" href="{{ url_for('about') }}">Sobre nosotros</a>
+{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h1>HELLO</h1>
+            </div>
+        </div>
+    </div>
+    {{ station_name }}
+    {{ initial_date }}
+    {{ final_date }}
+
+{% endblock %}

@@ -1,4 +1,4 @@
-#Creates the application object as an instance of class FLask imported from the flask package
+#Creates the application object as an instance of class Flask imported from the flask package
 from flask import Flask
 from config import Config
 
