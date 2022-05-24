@@ -1,22 +1,23 @@
 {% extends "base.html" %}
 
 {% block navbar %}
-    <a class="nav-link" aria-current="page" href="{{ url_for('home') }}">Inicio</a>
-    <a class="nav-link active" href="{{ url_for('upload') }}">Subir archivo</a>
-    <a class="nav-link" href="{{ url_for('new_station') }}">Nueva estación</a>
-    <a class="nav-link" href="{{ url_for('about') }}">Sobre nosotros</a>
+	<a class="nav-link" aria-current="page" href="{{ url_for('home') }}">Inicio</a>
+	<a class="nav-link active" href="{{ url_for('upload') }}">Subir archivo</a>
+	<a class="nav-link" href="{{ url_for('new_station') }}">Nueva estación</a>
+	<a class="nav-link" href="{{ url_for('about') }}">Sobre nosotros</a>
 {% endblock %}
 
 {% block content %}
 	<h2> Subir archivo </h2>
 	<form method="POST" action="/upload/submit_csv" enctype="multipart/form-data">
-		<p>Selecciona que tipo de datos se van a subir:<p>
+		<p>Selecciona que tipo de datos se van a subir:
+		<p>
 			{% for subfield in form.data_type %}
-				{{ subfield }}
-				{{ subfield.label }} <br>
+			{{ subfield }}
+			{{ subfield.label }} <br>
 			{% endfor %}
 			{% for error in form.data_type.errors %}
-				<span style="color:red;">[{{ error }}]</span>
+			<span style="color:red;">[{{ error }}]</span>
 			{% endfor %}
 		<p> Selecciona el archivo a subir:
 			{{ form.file }}

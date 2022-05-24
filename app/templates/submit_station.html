@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 
 {% block navbar %}
-    <a class="nav-link" aria-current="page" href="{{ url_for('home') }}">Inicio</a>
-    <a class="nav-link" href="{{ url_for('upload') }}">Subir archivo</a>
-    <a class="nav-link active" href="{{ url_for('new_station') }}">Nueva estación</a>
-    <a class="nav-link" href="{{ url_for('about') }}">Sobre nosotros</a>
+	<a class="nav-link" aria-current="page" href="{{ url_for('home') }}">Inicio</a>
+	<a class="nav-link" href="{{ url_for('upload') }}">Subir archivo</a>
+	<a class="nav-link active" href="{{ url_for('new_station') }}">Nueva estación</a>
+	<a class="nav-link" href="{{ url_for('about') }}">Sobre nosotros</a>
 {% endblock %}
 
 {% block content %}
 	<h2> Nueva estación creada </h2>
-    La estación con los siguientes valores se ha creado correctamente <br>
-    <br>
-	
+	La estación con los siguientes valores se ha creado correctamente <br>
+	<br>
+
 	<b>{{ form_new_station.name.label }}: </b>
 	{{ form_new_station.name.data }}
 	<br>
@@ -23,10 +23,10 @@
 	<br>
 
 	{% for nested in form_new_station.sensors.entries %}
-		<li>
-			<b>{{ nested.label }}: </b>
-			{{ nested.data }}		
-		</li>
-	{% endfor %}
+	<li>
+		<b>{{ nested.label }}: </b>
+		{{ nested.data }}
+	</li>
+{% endfor %}
 	<a href="{{ url_for('upload') }}"><button type="button" class="btn btn-primary">Subir archivo</button></a>
 {% endblock %}
