@@ -8,14 +8,124 @@
 {% endblock %}
 
 {% block content %}
+
     <div class="container">
         <div class="row">
+            <h2>Estación {{ station_name }}</h2>
+            <hr>
             <div class="col">
-                <h1>HELLO</h1>
+                <p>Sensor: {{sensor}}</p>
+                <p>Fecha inicial: {{initial_date}}</p>
+                <p>Fecha final: {{final_date}}</p>
+            </div>
+            <div class="col">
+                <!-- Change view button chart/table aligned to the right-->
+                <div style="display: flex; justify-content: flex-end">
+                    <button id="change_view_button" type="button" class="btn btn-info" onclick="change_view()">Ver tabla</button>
+                </div>
             </div>
         </div>
     </div>
-    {{ station_name }}
-    {{ initial_date }}
-    {{ final_date }}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js" integrity="sha512-QSkVNOCYLtj73J4hbmVoOV6KVZuMluZlioC+trLpewV8qMjsWqlIQvkn1KGX2StWvPMdWGBqim1xlC8krl1EKQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    
+    <div class="container">
+        <div id="div_chart">
+            <canvas id="line_chart"></canvas>
+        </div>
+        <div id="div_table">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <td>Fecha</td><td>Lectura</td>
+                    </tr>
+                </thead>
+                <tbody id="table_data">
+                    <!-- <tr>
+                        <td>Meses</td><td>Lecturas</td>
+                    </tr> -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Chart configuration -->
+    <script>
+        const ctx = document.getElementById('line_chart').getContext('2d');
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+                datasets: [{
+                    label: '# of Votes',
+                    data: [12, 19, 3, 5, 2, 3],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        //Loop through dates and sensor values [used to view the data in table format ]
+        const table_data = document.getElementById('table_data');
+        for(i = 0; i < myChart.data.labels.length; i++){
+            //New tr and new td 
+            const table_data_tr = document.createElement('tr');
+            const table_data_td_dt = document.createElement('td');    //td date time
+            const table_data_td_sm = document.createElement('td');    //td sensor measure
+            //Append the matching pair
+            const date_time = document.createTextNode(myChart.data.labels[i]);
+            const sensor_measure = document.createTextNode(myChart.data.datasets[0].data[i]);
+            table_data_td_dt .appendChild(date_time);
+            table_data_td_sm.appendChild(sensor_measure);
+            //Append the childern
+            table_data.appendChild(table_data_tr);
+            table_data_tr.appendChild(table_data_td_dt);
+            table_data_tr.appendChild(table_data_td_sm);
+        }
+    </script>
+    
+    <!-- Button change view chart/table -->
+    <script>
+        var table = document.getElementById("div_table");
+        table.style.display = "none";
+        function change_view() {
+            var chart = document.getElementById("div_chart");
+            var table = document.getElementById("div_table");
+            var change_button = document.getElementById("change_view_button");
+            if (chart.style.display === "none") {
+                chart.style.display = "block";
+                table.style.display = "none";
+                change_button.firstChild.data = "Ver tabla";
+            } else {
+                chart.style.display = "none";
+                table.style.display = 'block';
+                change_button.firstChild.data = "Ver gráfica";
+            }
+        } 
+    </script>
+
 {% endblock %}

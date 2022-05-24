@@ -106,10 +106,10 @@ def modal():
     items_data=items_data.values.tolist()
     return render_template('modal.html', title='Home', items_data=json.dumps(items_data))
 
-@app.route('/home/chart_table/<station_name>/<initial_date>/<final_date>', methods=['GET', 'POST'])
-def chart_table(station_name, initial_date, final_date):
+@app.route('/home/chart_table/<station_name>/<sensor>/<initial_date>/<final_date>', methods=['GET', 'POST'])
+def chart_table(station_name, sensor, initial_date, final_date):
 
-    return render_template('chart_table.html', title='Información', station_name=station_name, initial_date = initial_date, final_date = final_date)
+    return render_template('chart_table.html', title='Información', station_name=station_name, sensor=sensor, initial_date = initial_date, final_date = final_date)
 
 @app.route('/about')
 def about():

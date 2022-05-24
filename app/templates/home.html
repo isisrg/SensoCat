@@ -74,36 +74,35 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            Escoja un sensor:
-            <select id="selector" onchange="handleSelectorChange(this)" class="form-select" aria-label="Default select example"></select>
-
-            <br>
-
-            <div class="container">
-              <div class="row">
-                <div class="col">
-                  <!-- Initial date/time -->
-                  <label for='linkedPickers1Input' class='form-label'>Des de:</label>
-                  <div class='input-group log-event' id='linkedPickers1' data-td-target-input='nearest' data-td-target-toggle='nearest'>
-                  <input id='linkedPickers1Input' type='text' class='form-control' data-td-target='#linkedPickers1'/>
-                  <span class='input-group-text' data-td-target='#linkedPickers1' data-td-toggle='datetimepicker'>
-                      <span class='fa-solid fa-calendar'></span>
-                    </span>
+              Escoja un sensor:
+              <form method="POST" action="/new_station/submit_station">
+                <select id="selector" onchange="handleSelectorChange(this)" class="form-select" aria-label="Default select example"></select>
+                <br>
+                <div class="container">
+                  <div class="row">
+                    <div class="col">
+                      <!-- Initial date/time -->
+                      <label for='linkedPickers1Input' class='form-label'>Des de:</label>
+                      <div class='input-group log-event' id='linkedPickers1' data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                      <input id='linkedPickers1Input' type='text' class='form-control' data-td-target='#linkedPickers1'/>
+                      <span class='input-group-text' data-td-target='#linkedPickers1' data-td-toggle='datetimepicker'>
+                          <span class='fa-solid fa-calendar'></span>
+                        </span>
+                      </div>
+                    </div>
+                    <div class="col">
+                      <!-- Final date/time -->
+                      <label for='linkedPickers2Input' class='form-label'>Hasta: </label>
+                      <div class='input-group log-event' id='linkedPickers2' data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                      <input id='linkedPickers2Input' type='text' class='form-control' data-td-target='#linkedPickers2'/>
+                      <span class='input-group-text' data-td-target='#linkedPickers2' data-td-toggle='datetimepicker'>
+                          <span class='fa-solid fa-calendar'></span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="col">
-                  <!-- Final date/time -->
-                  <label for='linkedPickers2Input' class='form-label'>Hasta: </label>
-                  <div class='input-group log-event' id='linkedPickers2' data-td-target-input='nearest' data-td-target-toggle='nearest'>
-                  <input id='linkedPickers2Input' type='text' class='form-control' data-td-target='#linkedPickers2'/>
-                  <span class='input-group-text' data-td-target='#linkedPickers2' data-td-toggle='datetimepicker'>
-                      <span class='fa-solid fa-calendar'></span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
+              </form>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
