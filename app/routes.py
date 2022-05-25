@@ -114,14 +114,16 @@ def chart_table(station_name, sensor, initial_date, final_date):
             KeyConditionExpression=Key('Nombre').eq(station_name) & Key('Timestamp').between(initial_date, final_date)
         )
         reports = reports['Items']
-        print(reports)
         labels = []
         data = []
         for report in reports:
+            labels.append(report['Timestamp'])
+            data.append(report[sensor])
 
-            print('Nombre:', report['Nombre'], 'Fecha: ', report['Timestamp'])
-        return render_template('chart_table.html', title='Información', station_name=station_name, sensor=sensor, initial_date = initial_date, final_date = final_date)
-
+        return render_template('chart_table.html', title='Información', station_name=station_name, sensor=sensor, initial_date = initial_date, final_date = final_date, labels = labels, data = data)
+    if request.method == 'POST':
+        return redirect('/home')
+        
 @app.route('/about')
 def about():
     return render_template('about.html', title='Sobre nosotros')
