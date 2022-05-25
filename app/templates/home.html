@@ -17,6 +17,8 @@
   <!-- Make sure you put this AFTER Leaflet's CSS -->
   <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.3/moment.min.js" integrity="sha512-x/vqovXY/Q4b+rNjgiheBsA/vbWA3IVvsS8lkQSX1gQ4ggSJx38oI2vREZXpTzhAv6tNUaX81E7QBBzkpDQayA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
 {% endblock %}
 
 {% block navbar %}
@@ -73,9 +75,9 @@
             <h5 class="modal-title" id="exampleModalLabel">Estación:</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body">
-              Escoja un sensor:
-              <form method="POST" action="/new_station/submit_station">
+          <form action="/home/chart_table" method="GET" id="view_data_form">
+            <div class="modal-body">
+                Escoja un sensor:
                 <select id="selector" onchange="handleSelectorChange(this)" class="form-select" aria-label="Default select example"></select>
                 <br>
                 <div class="container">
@@ -102,12 +104,13 @@
                     </div>
                   </div>
                 </div>
-              </form>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            <button type="button" class="btn btn-primary">Ver datos</button>
-          </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+              <!-- <button type="button" class="btn btn-primary" id="view_data_button" onclick="view_data()">Ver datos</button> -->
+              <button type="submit" class="btn btn-primary" id="view_data_button">Ver datos</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -127,7 +130,6 @@
 
         recipient = recipient.split(",")
         var station_name = recipient[recipient.length - 4]
-        console.log(recipient)
 
         var modalTitle = exampleModal.querySelector('.modal-title')
         var modalBodyInput = exampleModal.querySelector('.modal-body input')
@@ -143,34 +145,74 @@
           select.text = option;
           selector.appendChild(select);
         })
+
+        //Date-time selector 
+        const linkedPicker1Element = document.getElementById('linkedPickers1');
+        const linked1 = new tempusDominus.TempusDominus(linkedPicker1Element);
+        const linked2 = new tempusDominus.TempusDominus(document.getElementById('linkedPickers2'), {
+          useCurrent: false
+        });
+        //using event listeners
+        linkedPicker1Element.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+          linked2.updateOptions({
+            restrictions: {
+              minDate: e.detail.date
+            }
+          });
+        });
+        //using subscribe method
+        const subscription = linked2.subscribe(tempusDominus.Namespace.events.change, (e) => {
+          linked1.updateOptions({
+            restrictions: {
+              maxDate: e.date
+            }
+          });
+        });
+
+        //FORM
+        //When submit is clicked the form is formated and submitted
+        document.getElementById('view_data_form').addEventListener('submit', function(s) {
+          var sensor = document.getElementById('selector').value
+          var initial_date = document.getElementById('linkedPickers1Input').value
+          var final_date = document.getElementById('linkedPickers2Input').value
+          //This function formats the date to the standard format
+          function format_date_time(date){
+            if(date.length == 22){
+              if(date[17] == "p"){
+                aux = parseInt(date[12])+12
+                aux = aux.toString()
+                date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+aux[0]+aux[1]+":"+date[14]+date[15]
+              }
+              else date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T0"+date[12]+":"+date[14]+date[15]
+            }
+            else if(date.length == 23){
+              if(date[18] == "p"){
+                if(date[13]=='2') date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+date[12]+date[13]+":"+date[15]+date[16]
+                else{
+                  aux = date[12]+date[13]
+                  aux = parseInt(aux)+12
+                  aux = aux.toString()
+                  date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+aux[0]+aux[1]+":"+date[15]+date[16]
+                }
+              }
+              else{
+                if(date[13]=='2') date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T00:"+date[15]+date[16]
+                else date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+date[12]+date[13]+":"+date[15]+date[16]
+              }
+            }
+            return date
+          }
+          //initial_date and final_date are now formated to the standard
+          initial_date = format_date_time(initial_date)
+          final_date = format_date_time(final_date)
+          //Contruction of the GET's dynamic URL and submition of the form
+          const template = (station_name, sensor, initial_date, final_date) => `/home/chart_table/${station_name}/${sensor}/${initial_date}/${final_date}`;
+          s.preventDefault();
+          this.action = template(station_name, sensor, initial_date, final_date);
+          this.submit();
+        });
+        
       })
-    </script>
-
-    <!-- Date-time selector -->
-    <script>
-      const linkedPicker1Element = document.getElementById('linkedPickers1');
-      const linked1 = new tempusDominus.TempusDominus(linkedPicker1Element);
-      const linked2 = new tempusDominus.TempusDominus(document.getElementById('linkedPickers2'), {
-        useCurrent: false
-      });
-
-      //using event listeners
-      linkedPicker1Element.addEventListener(tempusDominus.Namespace.events.change, (e) => {
-        linked2.updateOptions({
-          restrictions: {
-            minDate: e.detail.date
-          }
-        });
-      });
-
-      //using subscribe method
-      const subscription = linked2.subscribe(tempusDominus.Namespace.events.change, (e) => {
-        linked1.updateOptions({
-          restrictions: {
-            maxDate: e.date
-          }
-        });
-      });
     </script>
 
     <!-- {% block modal %}{% endblock %} -->

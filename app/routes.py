@@ -1,4 +1,5 @@
 #Creates the application object as an instance of class Flask imported from the flask package
+from crypt import methods
 from flask import Flask
 
 # FLASK
@@ -108,8 +109,18 @@ def modal():
 
 @app.route('/home/chart_table/<station_name>/<sensor>/<initial_date>/<final_date>', methods=['GET', 'POST'])
 def chart_table(station_name, sensor, initial_date, final_date):
+    if request.method == 'GET':
+        reports = reports_table.query(
+            KeyConditionExpression=Key('Nombre').eq(station_name) & Key('Timestamp').between(initial_date, final_date)
+        )
+        reports = reports['Items']
+        print(reports)
+        labels = []
+        data = []
+        for report in reports:
 
-    return render_template('chart_table.html', title='Información', station_name=station_name, sensor=sensor, initial_date = initial_date, final_date = final_date)
+            print('Nombre:', report['Nombre'], 'Fecha: ', report['Timestamp'])
+        return render_template('chart_table.html', title='Información', station_name=station_name, sensor=sensor, initial_date = initial_date, final_date = final_date)
 
 @app.route('/about')
 def about():
