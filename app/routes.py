@@ -40,7 +40,6 @@ def home():
     table_data = stations_table.scan()
     #Returns the items from the data collected and saves it into pandas
     items_data = pd.DataFrame(table_data['Items'])
-    # print(items_data)
 
     #Header values
     header = items_data.columns.values
@@ -48,14 +47,8 @@ def home():
     name_index = header.index('Nombre')
     latitude_index = header.index('Latitud')
     longitude_index = header.index('Longitud')
-    sensor_index = header.index('Sensores')
-    # print('Name index: ', name_index, ' Latitude index: ', latitude_index, ' Longitude index: ', longitude_index, ' Sensor index: ', sensor_index)
-    # print('HEADER: ', header)
-
     #Number of rows of the csv
     row_size = items_data.shape[0]
-    #Number of columns of the csv
-    col_size = items_data.shape[1]
 
     for count_row in range(0, row_size):
         station_name = items_data.iloc[count_row,:].values[name_index]
@@ -80,19 +73,49 @@ def home():
             final_date = final_date[0]['Timestamp']
             print('Station: ', station_name, ' Initial date: ', initial_date, ' Final date: ', final_date)
 
-            # stations_table.update_item(
-            #     Key={'Nombre': str(station_name)},
-            #     AttributeUpdates={
-            #         'Fecha inicio': str(initial_date),
-            #         'Fecha fin': str(final_date)
-            #     },
-            # )
-            # test = '{"Nombre": "' +str(station_name)+ '", "Fecha inicio": "' +str(initial_date)+ '", "Fecha fin": "' +str(final_date)+ '"}'
-            # print(test)
-            # converted_data = json.loads(test)
-            # print(converted_data)
-            # stations_table.put_item(Item=converted_data)
+            stations_table.update_item(
+                Key={'Nombre': str(station_name)},
+                UpdateExpression="SET #fechainicio = :idate, #fechafin = :fdate",
+                ExpressionAttributeNames={
+                    "#fechainicio": "Fecha-inicio",
+                    "#fechafin": "Fecha-fin"
+                },
+                ExpressionAttributeValues={
+                    ':idate': str(initial_date),
+                    ':fdate': str(final_date)
+                },
+                ReturnValues="UPDATED_NEW"
+            )
+            last_readings = reports_table.query(
+                Limit = 1,
+                KeyConditionExpression=Key('Nombre').eq(station_name) & Key('Timestamp').eq(final_date)
+            )
+            last_readings = last_readings['Items'][0]
+            last_readings = dict(last_readings)
+            first_sensor = 0
 
+            for key, value in last_readings.items():
+                # print(key, '->', value)
+                if key != 'Nombre' and key != 'Timestamp':
+                    if first_sensor == 0: 
+                        data_json = '{"' + str(key) + '": "' + str(value) + '"' 
+                        first_sensor = 1    
+                    else:
+                        data_json += ', "' + str(key) + '": "' + str(value) + '"'
+            if data_json:
+                data_json += '}'
+
+            stations_table.update_item(
+                Key={'Nombre': str(station_name)},
+                UpdateExpression="SET #ultimalectura = :ulectura",
+                ExpressionAttributeNames={
+                    "#ultimalectura": "Ultima-lectura"
+                },
+                ExpressionAttributeValues={
+                    ':ulectura': str(data_json),
+                },
+                ReturnValues="UPDATED_NEW"
+            )
         print(station_name)
     items_data=items_data.values.tolist()
     return render_template('home.html', title='Inicio', items_data=json.dumps(items_data), name_index=name_index, latitude_index=latitude_index, longitude_index=longitude_index)

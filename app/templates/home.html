@@ -138,7 +138,7 @@
         var selector = document.querySelector("#selector");
         selector.innerHTML = '';
         // options contains all the sensors for one given station
-        var options = recipient.slice(0, recipient.length - 5);
+        var options = recipient.slice(0, recipient.length - 6);
         options.map(option => {
           var select = document.createElement('option');
           select.value = option;
