@@ -57,9 +57,8 @@
               .addTo(map)
               .openPopup()
       }*/
-      console.log(items_data)
+      
       for (var count_row = 0; count_row < items_data.length; count_row++) {
-        console.log('Nombre: ', items_data[count_row][name_index], ' Latitud: ', items_data[count_row][latitude_index], ' Longitude: ', items_data[count_row][longitude_index])
         marker = new L.marker([items_data[count_row][latitude_index], items_data[count_row][longitude_index]])
           .bindPopup(items_data[count_row][name_index] + "<br /> " + '<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="' + items_data[count_row] + '">Más información</button>')
           .addTo(map)
@@ -77,6 +76,21 @@
           </div>
           <form action="/home/chart_table" method="GET" id="view_data_form">
             <div class="modal-body">
+              <!-- Table of sensor's last readings -->
+              <div id="div_table">
+                Última lectura:
+                <table class="table table-bordered">
+                    <thead id="table_header">
+                        <!-- <tr>
+                            <td>Sensor</td><td>Lectura</td>
+                        </tr> -->
+                    </thead>
+                    <tbody id="table_data">
+                    </tbody>
+                </table>
+              </div>
+              <!-- Sensor and date-time selector -->
+              <div id="div_selector">
                 Escoja un sensor:
                 <select id="selector" onchange="handleSelectorChange(this)" class="form-select" aria-label="Default select example"></select>
                 <br>
@@ -104,11 +118,18 @@
                     </div>
                   </div>
                 </div>
+              </div>
+
             </div>
             <div class="modal-footer">
+              <div class="mr-auto">
+                <button id="togle_last_readings_button" type="button" class="btn btn-outline-primary" onclick="togle_last_readings()">Ver última lectura</button>
+              </div>
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
               <!-- <button type="button" class="btn btn-primary" id="view_data_button" onclick="view_data()">Ver datos</button> -->
-              <button type="submit" class="btn btn-primary" id="view_data_button">Ver datos</button>
+              <div id="div_submit">
+                <button type="submit" class="btn btn-primary" id="view_data_button">Ver datos</button>
+              </div>
             </div>
           </form>
         </div>
@@ -129,6 +150,21 @@
         // Update the modal's content.
 
         recipient = recipient.split(",")
+        
+        var reads = false
+        //In case of having reports of this sensor recipient[recipient.length - 6] should bedifferent than 'nan'
+        if (recipient[recipient.length - 6] != 'nan' && recipient[recipient.length - 6] != 'NaN'){
+          //In case of having reports, there are 2n entries being n the number of sensors of the station
+          //In order to access those sensors we have to access from the n-th previous position to the beginig of the recipient
+          var go_back = (recipient.length - 5)/2
+          reads = true
+        }
+        else{
+          //In case of not having reports there are n entries, being n the number of sensor of the station
+          //In order to access those sensors we have to access from the previous position (as this one is a 'nan value') to the beginig of the recipient
+          var go_back = 1
+        }
+        
         var station_name = recipient[recipient.length - 4]
 
         var modalTitle = exampleModal.querySelector('.modal-title')
@@ -137,8 +173,10 @@
         modalTitle.textContent = 'Estación ' + station_name
         var selector = document.querySelector("#selector");
         selector.innerHTML = '';
-        // options contains all the sensors for one given station
-        var options = recipient.slice(0, recipient.length - 6);
+        
+        //Options contains all the sensors for one given station
+        //To know where the sensors, which are at the begining of recipient, end we have to decrease the lenght of recipient by 5 ('Nombre', 'Fecha-inicio', 'Fecha-fin', 'Latitud', 'Longitud') + the go_back explained previously
+        var options = recipient.slice(0, recipient.length - (5 + go_back));
         options.map(option => {
           var select = document.createElement('option');
           select.value = option;
@@ -211,8 +249,67 @@
           this.action = template(station_name, sensor, initial_date, final_date);
           this.submit();
         });
-        
+
+        var togle_button = document.getElementById("togle_last_readings_button");
+        //Loop through sensor names and sensor values [used to view the last readings from a sensor]
+        if (reads){
+          togle_button.style.display = "block";
+          var last_readings = recipient.slice(go_back, recipient.length - 5);
+          var test = last_readings[0]
+          var test = test.split(":")
+          
+          const table_header = document.getElementById('table_header');
+          table_header.innerHTML = '';
+
+          var row = table_header.insertRow(0);
+          var cell_sn = row.insertCell(0);
+          var cell_sm = row.insertCell(1);
+          cell_sn.innerHTML = "Sensor";                                     //sensor name
+          cell_sm.innerHTML = "Lectura";                                    //sensor measure
+
+          const table_data = document.getElementById('table_data');
+          table_data.innerHTML = '';
+          for(i = 0; i < last_readings.length; i++){
+              var sensor_read = last_readings[i]
+              sensor_read = sensor_read.split(":")
+              var sr_sensor = sensor_read[0]                            //sensor read sensor name
+              var sr_value = sensor_read[1]                             //sensor read sensor value
+              //New tr and new td 
+              const table_data_tr = document.createElement('tr');
+              const table_data_td_sn = document.createElement('td');    //td sensor name
+              const table_data_td_sm = document.createElement('td');    //td sensor measure
+              //Append the matching pair
+              const date_time = document.createTextNode(sr_sensor);
+              const sensor_measure = document.createTextNode(sr_value);
+              table_data_td_sn .appendChild(date_time);
+              table_data_td_sm.appendChild(sensor_measure);
+              //Append the childern
+              table_data.appendChild(table_data_tr);
+              table_data_tr.appendChild(table_data_td_sn);
+              table_data_tr.appendChild(table_data_td_sm);
+          }
+        }
+        else{  
+          togle_button.style.display = "none";
+        }  
       })
+    </script>
+
+    <!-- Togle between seeing and hidding last readings -->
+    <script>
+      var table = document.getElementById("div_table");
+      table.style.display = "none";
+      function togle_last_readings() {
+        //var table = document.getElementById("div_table");
+        var change_button = document.getElementById("togle_last_readings_button");
+        if (table.style.display === "none") {
+            table.style.display = "block";
+            change_button.firstChild.data = "Ocultar última lectura";
+        } else {
+            table.style.display = "none";
+            change_button.firstChild.data = "Ver última lectura";
+        }
+      }
     </script>
 
     <!-- {% block modal %}{% endblock %} -->

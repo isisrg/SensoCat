@@ -8,21 +8,29 @@
 {% endblock %}
 
 {% block content %}
-	<h2> Subir archivo </h2>
-	<form method="POST" action="/upload/submit_csv" enctype="multipart/form-data">
-		<p>Selecciona que tipo de datos se van a subir:
-		<p>
+	<div class="container">
+		<h2> Subir archivo </h2>
+		<hr>
+		<form method="POST" action="/upload/submit_csv" enctype="multipart/form-data">
+			Selecciona que tipo de datos se van a subir:
+			<br>
+			<br>
 			{% for subfield in form.data_type %}
-			{{ subfield }}
-			{{ subfield.label }} <br>
+				{{ subfield(class="form-check-input") }}
+				{{ subfield.label }} <br>
 			{% endfor %}
-			{% for error in form.data_type.errors %}
+			
+			<!-- {% for error in form.data_type.errors %}
 			<span style="color:red;">[{{ error }}]</span>
-			{% endfor %}
-		<p> Selecciona el archivo a subir:
-			{{ form.file }}
+			{% endfor %} -->
+
+			<br>
+			Selecciona el archivo a subir:
+			{{ form.file(class="form-control") }}
 			<br>
 			<input type="submit" class="btn btn-primary" value="Subir">
-		</p>
-	</form>
+			</p>
+		</form>
+	</div>
+	
 {% endblock %}

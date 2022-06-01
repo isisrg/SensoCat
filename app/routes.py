@@ -98,12 +98,12 @@ def home():
                 # print(key, '->', value)
                 if key != 'Nombre' and key != 'Timestamp':
                     if first_sensor == 0: 
-                        data_json = '{"' + str(key) + '": "' + str(value) + '"' 
+                        data_json = str(key) + ':' + str(value) 
                         first_sensor = 1    
                     else:
-                        data_json += ', "' + str(key) + '": "' + str(value) + '"'
-            if data_json:
-                data_json += '}'
+                        data_json += ',' + str(key) + ':' + str(value)
+            # if data_json:
+            #     data_json += '}'
 
             stations_table.update_item(
                 Key={'Nombre': str(station_name)},
@@ -344,8 +344,8 @@ def submit_station():
         #Number of columns of the csv
         col_size = items_data.shape[1]
 
-        #Primero equals 0 if its the first iteration on the Contaminantes column (also indicates wether the Contaminantes column exists or not)
-        primero = 0
+        #first equals 0 if its the first iteration on the Contaminantes column (also indicates wether the Contaminantes column exists or not)
+        first = 0
 
         data_json = '{"'
 
@@ -359,10 +359,10 @@ def submit_station():
                 # # data_json += ', "' + str(header[count_col]) + '": ['
                 # data_json += ', "' + str(header[count_col]) + '": "'
                 # for nested in form_new_station.sensors.entries:
-                #     if primero == 0:
+                #     if first == 0:
                 # #         data_json += '"' + str(nested.data) + '"'
                 #         data_json += str(nested.data)
-                #         primero = 1
+                #         first = 1
                 #     else:
                 # #         data_json += ', "' + str(nested.data) + '"'
                 #         data_json += ',' + str(nested.data)
@@ -374,9 +374,9 @@ def submit_station():
                     data_json += ', "' + str(header[count_col]) + '": "'
                 sensors = ''
                 for nested in data:
-                    if primero == 0:
+                    if first == 0:
                         sensors += str(nested.data)
-                        primero = 1
+                        first = 1
                     else:
                         sensors += ','+str(nested.data) 
                 print(sensors)
@@ -386,12 +386,12 @@ def submit_station():
                     data_json += ', "' + str(header[count_col]) + '": "' + str(data) + '"'
 
         #If Contaminantes column does not exists then creates one with the data specified by the user in the form
-        # if primero == 0:
+        # if first == 0:
         #     data_json += ', "Contaminantes": ['
         #     for nested in form_new_station.sensors.entries:
-        #         if primero == 0:
+        #         if first == 0:
         #             data_json += '"' + str(nested.data) + '"'
-        #             primero = 1
+        #             first = 1
         #         else:
         #             data_json += ', "' + str(nested.data) + '"'
         #     data_json += ']'
