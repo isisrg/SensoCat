@@ -76,44 +76,49 @@
           </div>
           <form action="/home/chart_table" method="GET" id="view_data_form">
             <div class="modal-body">
-              <!-- Table of sensor's last readings -->
-              <div id="div_table">
-                Última lectura:
-                <table class="table table-bordered">
-                    <thead id="table_header">
-                        <!-- <tr>
-                            <td>Sensor</td><td>Lectura</td>
-                        </tr> -->
-                    </thead>
-                    <tbody id="table_data">
-                    </tbody>
-                </table>
+              <div id="no_data_message">
+                No hay datos para esta estación
               </div>
-              <!-- Sensor and date-time selector -->
-              <div id="div_selector">
-                Escoja un sensor:
-                <select id="selector" onchange="handleSelectorChange(this)" class="form-select" aria-label="Default select example"></select>
-                <br>
-                <div class="container">
-                  <div class="row">
-                    <div class="col">
-                      <!-- Initial date/time -->
-                      <label for='linkedPickers1Input' class='form-label'>Des de:</label>
-                      <div class='input-group log-event' id='linkedPickers1' data-td-target-input='nearest' data-td-target-toggle='nearest'>
-                      <input id='linkedPickers1Input' type='text' class='form-control' data-td-target='#linkedPickers1'/>
-                      <span class='input-group-text' data-td-target='#linkedPickers1' data-td-toggle='datetimepicker'>
-                          <span class='fa-solid fa-calendar'></span>
-                        </span>
+              <div id="modal_form">
+                <!-- Table of sensor's last readings -->
+                <div id="div_table">
+                  Última lectura:
+                  <table class="table table-bordered">
+                      <thead id="table_header">
+                          <!-- <tr>
+                              <td>Sensor</td><td>Lectura</td>
+                          </tr> -->
+                      </thead>
+                      <tbody id="table_data">
+                      </tbody>
+                  </table>
+                </div>
+                <!-- Sensor and date-time selector -->
+                <div id="div_selector">
+                  Escoja un sensor:
+                  <select id="selector" onchange="handleSelectorChange(this)" class="form-select" aria-label="Default select example"></select>
+                  <br>
+                  <div class="container">
+                    <div class="row">
+                      <div class="col">
+                        <!-- Initial date/time -->
+                        <label for='linkedPickers1Input' class='form-label'>Des de:</label>
+                        <div class='input-group log-event' id='linkedPickers1' data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                        <input id='linkedPickers1Input' type='text' class='form-control' data-td-target='#linkedPickers1'/>
+                        <span class='input-group-text' data-td-target='#linkedPickers1' data-td-toggle='datetimepicker'>
+                            <span class='fa-solid fa-calendar'></span>
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div class="col">
-                      <!-- Final date/time -->
-                      <label for='linkedPickers2Input' class='form-label'>Hasta: </label>
-                      <div class='input-group log-event' id='linkedPickers2' data-td-target-input='nearest' data-td-target-toggle='nearest'>
-                      <input id='linkedPickers2Input' type='text' class='form-control' data-td-target='#linkedPickers2'/>
-                      <span class='input-group-text' data-td-target='#linkedPickers2' data-td-toggle='datetimepicker'>
-                          <span class='fa-solid fa-calendar'></span>
-                        </span>
+                      <div class="col">
+                        <!-- Final date/time -->
+                        <label for='linkedPickers2Input' class='form-label'>Hasta: </label>
+                        <div class='input-group log-event' id='linkedPickers2' data-td-target-input='nearest' data-td-target-toggle='nearest'>
+                        <input id='linkedPickers2Input' type='text' class='form-control' data-td-target='#linkedPickers2'/>
+                        <span class='input-group-text' data-td-target='#linkedPickers2' data-td-toggle='datetimepicker'>
+                            <span class='fa-solid fa-calendar'></span>
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -150,7 +155,9 @@
         // Update the modal's content.
 
         recipient = recipient.split(",")
-        
+        // console.log(recipient)
+        // console.log('INICIO: ',recipient[recipient.length-2])
+        // console.log('FINAL: ', recipient[recipient.length-1])
         var reads = false
         //In case of having reports of this sensor recipient[recipient.length - 6] should bedifferent than 'nan'
         if (recipient[recipient.length - 6] != 'nan' && recipient[recipient.length - 6] != 'NaN'){
@@ -168,92 +175,108 @@
         var station_name = recipient[recipient.length - 4]
 
         var modalTitle = exampleModal.querySelector('.modal-title')
-        var modalBodyInput = exampleModal.querySelector('.modal-body input')
-
         modalTitle.textContent = 'Estación ' + station_name
-        var selector = document.querySelector("#selector");
-        selector.innerHTML = '';
-        
-        //Options contains all the sensors for one given station
-        //To know where the sensors, which are at the begining of recipient, end we have to decrease the lenght of recipient by 5 ('Nombre', 'Fecha-inicio', 'Fecha-fin', 'Latitud', 'Longitud') + the go_back explained previously
-        var options = recipient.slice(0, recipient.length - (5 + go_back));
-        options.map(option => {
-          var select = document.createElement('option');
-          select.value = option;
-          select.text = option;
-          selector.appendChild(select);
-        })
 
-        //Date-time selector 
-        const linkedPicker1Element = document.getElementById('linkedPickers1');
-        const linked1 = new tempusDominus.TempusDominus(linkedPicker1Element);
-        const linked2 = new tempusDominus.TempusDominus(document.getElementById('linkedPickers2'), {
-          useCurrent: false
-        });
-        //using event listeners
-        linkedPicker1Element.addEventListener(tempusDominus.Namespace.events.change, (e) => {
-          linked2.updateOptions({
-            restrictions: {
-              minDate: e.detail.date
-            }
-          });
-        });
-        //using subscribe method
-        const subscription = linked2.subscribe(tempusDominus.Namespace.events.change, (e) => {
-          linked1.updateOptions({
-            restrictions: {
-              maxDate: e.date
-            }
-          });
-        });
+        var modal_form = document.getElementById("modal_form");
+        var togle_button = document.getElementById("togle_last_readings_button");
+        var see_data_button = document.getElementById('div_submit');
+        var no_data_message = document.getElementById('no_data_message');
 
-        //FORM
-        //When submit is clicked the form is formated and submitted
-        document.getElementById('view_data_form').addEventListener('submit', function(s) {
-          var sensor = document.getElementById('selector').value
-          var initial_date = document.getElementById('linkedPickers1Input').value
-          var final_date = document.getElementById('linkedPickers2Input').value
-          //This function formats the date to the standard format
-          function format_date_time(date){
-            if(date.length == 22){
-              if(date[17] == "p"){
-                aux = parseInt(date[12])+12
-                aux = aux.toString()
-                date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+aux[0]+aux[1]+":"+date[14]+date[15]
+        if (reads){
+          var modalBodyInput = exampleModal.querySelector('.modal-body input')
+          var selector = document.querySelector("#selector");
+          selector.innerHTML = '';
+          
+          //Options contains all the sensors for one given station
+          //To know where the sensors, which are at the begining of recipient, end we have to decrease the lenght of recipient by 5 ('Nombre', 'Fecha-inicio', 'Fecha-fin', 'Latitud', 'Longitud') + the go_back explained previously
+          var options = recipient.slice(0, recipient.length - (5 + go_back));
+          options.map(option => {
+            var select = document.createElement('option');
+            select.value = option;
+            select.text = option;
+            selector.appendChild(select);
+          })
+
+          //Date-time selector 
+          const linkedPicker1Element = document.getElementById('linkedPickers1');
+          const linked1 = new tempusDominus.TempusDominus(linkedPicker1Element);
+          const linked2 = new tempusDominus.TempusDominus(document.getElementById('linkedPickers2'), {
+            useCurrent: false
+          });
+          //using event listeners
+          linkedPicker1Element.addEventListener(tempusDominus.Namespace.events.change, (e) => {
+            linked2.updateOptions({
+              restrictions: {
+                minDate: e.detail.date
               }
-              else date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T0"+date[12]+":"+date[14]+date[15]
-            }
-            else if(date.length == 23){
-              if(date[18] == "p"){
-                if(date[13]=='2') date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+date[12]+date[13]+":"+date[15]+date[16]
-                else{
-                  aux = date[12]+date[13]
-                  aux = parseInt(aux)+12
+            });
+          });
+          //using subscribe method
+          const subscription = linked2.subscribe(tempusDominus.Namespace.events.change, (e) => {
+            linked1.updateOptions({
+              restrictions: {
+                maxDate: e.date
+              }
+            });
+          });
+
+          //FORM
+          //When submit is clicked the form is formated and submitted
+          document.getElementById('view_data_form').addEventListener('submit', function(s) {
+            var sensor = document.getElementById('selector').value
+            var initial_date = document.getElementById('linkedPickers1Input').value
+            var final_date = document.getElementById('linkedPickers2Input').value
+            //This function formats the date to the standard format
+            function format_date_time(date){
+              if(date.length == 22){
+                if(date[17] == "p"){
+                  aux = parseInt(date[12])+12
                   aux = aux.toString()
-                  date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+aux[0]+aux[1]+":"+date[15]+date[16]
+                  date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+aux[0]+aux[1]+":"+date[14]+date[15]
+                }
+                else date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T0"+date[12]+":"+date[14]+date[15]
+              }
+              else if(date.length == 23){
+                if(date[18] == "p"){
+                  if(date[13]=='2') date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+date[12]+date[13]+":"+date[15]+date[16]
+                  else{
+                    aux = date[12]+date[13]
+                    aux = parseInt(aux)+12
+                    aux = aux.toString()
+                    date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+aux[0]+aux[1]+":"+date[15]+date[16]
+                  }
+                }
+                else{
+                  if(date[13]=='2') date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T00:"+date[15]+date[16]
+                  else date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+date[12]+date[13]+":"+date[15]+date[16]
                 }
               }
-              else{
-                if(date[13]=='2') date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T00:"+date[15]+date[16]
-                else date = date[6]+date[7]+date[8]+date[9]+"-"+date[3]+date[4]+"-"+date[0]+date[1]+"T"+date[12]+date[13]+":"+date[15]+date[16]
-              }
+              return date
             }
-            return date
-          }
-          //initial_date and final_date are now formated to the standard
-          initial_date = format_date_time(initial_date)
-          final_date = format_date_time(final_date)
-          //Contruction of the GET's dynamic URL and submition of the form
-          const template = (station_name, sensor, initial_date, final_date) => `/home/chart_table/${station_name}/${sensor}/${initial_date}/${final_date}`;
-          s.preventDefault();
-          this.action = template(station_name, sensor, initial_date, final_date);
-          this.submit();
-        });
+            //first_read makes reference to 'Fecha-inicio' of a station's reports in 'Estaciones' table
+            first_read = recipient[recipient.length-2]
+            //last_Read makes reference to 'Fecha-fin' of a station's reports in 'Estaciones' table
+            last_read = recipient[recipient.length-1]
+            //initial_date and final_date are now formated to the standard
+            initial_date = format_date_time(initial_date)
+            final_date = format_date_time(final_date)
 
-        var togle_button = document.getElementById("togle_last_readings_button");
-        //Loop through sensor names and sensor values [used to view the last readings from a sensor]
-        if (reads){
+            //If the first read of the station (first_read) has been done after the specified date-time by the user (initial_time), or if no initial_date has been selected by the user, then the initial_date would have first_date value
+            if((first_read > initial_date) || initial_date == '') initial_date = first_read
+            //If the last read of the station (last_read) has been done before the specified date-time by the user (final_date), or if no final_date has been selected by the user, then the final_date would have last_date value
+            if((last_read < final_date) || final_date == '') final_date = last_read
+
+            //Contruction of the GET's dynamic URL and submition of the form
+            const template = (station_name, sensor, initial_date, final_date) => `/home/chart_table/${station_name}/${sensor}/${initial_date}/${final_date}`;
+            s.preventDefault();
+            this.action = template(station_name, sensor, initial_date, final_date);
+            this.submit();
+          });
+
+          modal_form.style.display = "block";
           togle_button.style.display = "block";
+          see_data_button.style.display = "block";
+          no_data_message.style.display = "none";
           var last_readings = recipient.slice(go_back, recipient.length - 5);
           var test = last_readings[0]
           var test = test.split(":")
@@ -264,11 +287,13 @@
           var row = table_header.insertRow(0);
           var cell_sn = row.insertCell(0);
           var cell_sm = row.insertCell(1);
-          cell_sn.innerHTML = "Sensor";                                     //sensor name
-          cell_sm.innerHTML = "Lectura";                                    //sensor measure
+          cell_sn.innerHTML = "Sensor";                                 //sensor name
+          cell_sm.innerHTML = "Lectura";                                //sensor measure
 
           const table_data = document.getElementById('table_data');
           table_data.innerHTML = '';
+
+          //Loop through sensor names and sensor values [used to view the last readings from a sensor]
           for(i = 0; i < last_readings.length; i++){
               var sensor_read = last_readings[i]
               sensor_read = sensor_read.split(":")
@@ -289,8 +314,11 @@
               table_data_tr.appendChild(table_data_td_sm);
           }
         }
-        else{  
+        else{
+          modal_form.style.display = "none";  
           togle_button.style.display = "none";
+          see_data_button.style.display = "none";
+          no_data_message.style.display = "block";
         }  
       })
     </script>
