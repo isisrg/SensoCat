@@ -18,7 +18,7 @@
   <script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"></script>
 
   <!-- Overlapping Marker Spiderfier -->
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/OverlappingMarkerSpiderfier-Leaflet/0.2.6/oms.min.js" integrity="sha512-V8RRDnS4BZXrat3GIpnWx+XNYBHQGdK6nKOzMpX4R0hz9SPWt7fltGmmyGzUkVFZUQODO1rE+SWYJJkw3SYMhg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 {% endblock %}
 
@@ -43,7 +43,22 @@
       'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; ' + mapLink + ' Contributors',
       maxZoom: 18,
-    }).addTo(map);
+    }).addTo(map)
+
+    var oms = new OverlappingMarkerSpiderfier(map);
+    var popup = new L.Popup();
+
+    //On click opens spiderfier marker and appear all the markers that compose it (if it is more than one)
+    oms.addListener('click', function(marker) {
+      popup.setContent(marker.desc);
+      popup.setLatLng(marker.getLatLng());
+      map.openPopup(popup);
+    });
+
+    //On click merges all the markers of the spiderfier into one again
+    oms.addListener('spiderfy', function(markers) {
+      map.closePopup();
+    });
 
     //items_data takes the list of stations and its information from routes (in python) and parses it to js
     var items_data = {{ items_data| safe }}
@@ -52,19 +67,23 @@
     var longitude_index = {{ longitude_index| safe }}
 
     //Places all the pins in the map
+    for (var count_row = 0; count_row < items_data.length; count_row ++) {
+      var item_data = items_data[count_row];
+      var coordinates = new L.LatLng(item_data[latitude_index], item_data[longitude_index]);
+      var marker = new L.Marker(coordinates);
+      marker.desc = item_data[name_index] + "<br /> " + '<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="' + item_data + '">Más información</button>';
+      map.addLayer(marker);
+      oms.addMarker(marker);
+    }
+
+    //Places all the pins in the map    
     /*for (var count_row = 0; count_row < items_data.length; count_row++) {
-        marker = new L.marker([items_data[count_row][1], items_data[count_row][0]])
-            .bindPopup(items_data[count_row][2] + "<br /> " +"<a href={{ url_for('modal') }}>Más información</a>")
-            .addTo(map)
-            .openPopup()
-    }*/
-    
-    for (var count_row = 0; count_row < items_data.length; count_row++) {
       marker = new L.marker([items_data[count_row][latitude_index], items_data[count_row][longitude_index]])
         .bindPopup(items_data[count_row][name_index] + "<br /> " + '<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="' + items_data[count_row] + '">Más información</button>')
         .addTo(map)
         .openPopup()
-    }
+    }*/
+    //var map = new L.map
   </script>
 
   <!-- Modal -->
