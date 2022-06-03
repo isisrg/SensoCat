@@ -208,9 +208,8 @@ def submit_csv():
             for count_col in range(0, col_size):
                 row_values = df.iloc[count_row,:].values
                     
-                if str(header[count_col]) == 'date':
+                if str(header[count_col]) == 'date':        
                     header[count_col] = 'Timestamp'
-                
                 # if str(header[count_col]) == 'Sensores' and mode == 0:
                 #     row_values[count_col] = str(row_values[count_col])
                 #     row_values[count_col] = row_values[count_col].split(",")
