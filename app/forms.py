@@ -13,8 +13,9 @@ class LoginForm(FlaskForm):
 
 class UploadForm(FlaskForm):
 	#Creates two radio buttons, one for stations and another one for reports. Forces the user to pick one of the two, if none of those are selected then appears a message to inform the user
-	data_type = RadioField('data_type', choices=[('stations', 'Estaciones de referencia'), ('reports-ref', 'Informes de estación de referencia'), ('reports-captor', 'Informes de estación captor')], validators=[DataRequired()])
-	#dropdown = SelectField('drop_down', choices = [('captor', 'Estación captor'), ('ref', 'Estación de referencia')], validators = [DataRequired()])
+	# data_type = RadioField('data_type', choices=[('stations', 'Información de estaciones'), ('reports-ref', 'Informes de estación de referencia'), ('reports-captor', 'Informes de estación captor')], validators=[DataRequired()])
+	#dropdown
+	data_type = SelectField('data_type', choices=[('stations', 'Información de estaciones'), ('reports-ref', 'Informes de estación de referencia'), ('reports-captor', 'Informes de estación captor')], validators=[DataRequired()])
 	file = FileField('file', validators=[FileRequired(), FileAllowed(['csv'], 'Solo archivos CSV!')])
 
 class NewStationForm(FlaskForm):

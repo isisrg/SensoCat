@@ -8,35 +8,61 @@
 {% endblock %}
 
 {% block content %}
+	<br>
 	<div class="container">
-		<div class="row">
-			<h2> Crear nueva estación </h2>
-			<hr>
-			<form method="POST" action="/new_station/submit_station">
-				{{ form_new_station.name.label }}
-				{{ form_new_station.name(class="form-control") }}
-				<br>
-				{{ form_new_station.latitude.label }}
-				{{ form_new_station.latitude(class="form-control") }}
-				<br>
-				{{ form_new_station.longitude.label }}
-				{{ form_new_station.longitude(class="form-control") }}
-				<br>
-				<div>
-					<ul id='sensors' class="list-group list-group-flush">
-						{% for nested in form_new_station.sensors.entries %}
-						<li class="list-group-item bg-transparent">
-							{{ nested.label }}
-							{{ nested(class="form-control")}}
-						</li>
-						{% endfor %}
-					</ul>
-				</div>
-				
-				<br>
-				<button id="add-sensor-field" type="button" class="btn btn-outline-secondary">Añadir sensor</button>
-				<button type="submit" class="btn btn-primary">Guardar estación</button>
-			</form>
+		<div class="card bg-transparent">
+			<div class="card-header">
+				<p class="fs-2 fw-light"> Crear nueva estación </p>
+			</div>
+			<div class="card-body">
+				<form method="POST" action="/new_station/submit_station">
+					<!-- {{ form_new_station.name.label }}
+					{{ form_new_station.name(class="form-control", placeholder="ej: UPC-FIB") }}
+					<br>
+					{{ form_new_station.latitude.label }}
+					{{ form_new_station.latitude(class="form-control", placeholder="ej: 41.38944707191198") }}
+					<br>
+					{{ form_new_station.longitude.label }}
+					{{ form_new_station.longitude(class="form-control", placeholder="ej: 2.113366705106955") }}
+					<br> -->
+					<div class="row">
+						<div class="col">
+							{{ form_new_station.name.label }}
+							{{ form_new_station.name(class="form-control", placeholder="ej: UPC-FIB") }}
+						</div>
+						<div class="col">
+							{{ form_new_station.latitude.label }}
+						{{ form_new_station.latitude(class="form-control", placeholder="ej: 41.38944707191198") }}
+						</div>
+						<div class="col">
+							{{ form_new_station.longitude.label }}
+						{{ form_new_station.longitude(class="form-control", placeholder="ej: 2.113366705106955") }}
+						</div>
+					</div>
+					<br>
+					
+					<div class="card bg-transparent">
+						<div class="card-header">
+							Sensores
+						</div>
+						<div class="card-body">
+							<ul id='sensors' class="list-group list-group-flush">
+								{% for nested in form_new_station.sensors.entries %}
+								<li class="list-group-item bg-transparent">
+									<!-- {{ nested.label }} -->
+									{{ nested(class="form-control", placeholder="ej: o3_mox_s1")}}
+								</li>
+								{% endfor %}
+							</ul>
+							<!-- <button id="add-sensor-field" type="button" class="btn btn-outline-secondary">Añadir sensor</button> -->
+						</div>
+						<button id="add-sensor-field" type="button" class="btn btn-outline-secondary">Añadir sensor</button>
+					</div>
+
+					<br>
+					<button type="submit" class="btn btn-primary float-right">Guardar estación</button>
+				</form>
+			</div>
 		</div>
 	</div>
 	
@@ -58,7 +84,7 @@
 				}
 				let new_field_name = `sensors-${Math.max(...sensors_inputs_id) + 1}`;
 				all_sensors_wrapper.insertAdjacentHTML('beforeend', `
-					<li id="${new_field_name}" class="list-group-item bg-transparent"> <label for="${new_field_name}">Sensor</label> <div class="input-group"> <input id="${new_field_name}" name="${new_field_name}" type="text" value="" class="form-control"> <div class="input-group-append"> <button type="button" class="btn btn-danger btn-sm"onClick="delete_station('${new_field_name}')">Eliminar sensor</button> </div> </div> </li>`);
+					<li id="${new_field_name}" class="list-group-item bg-transparent"> <label for="${new_field_name}"> </label> <div class="input-group"> <input id="${new_field_name}" name="${new_field_name}" type="text" value="" class="form-control" placeholder="ej: o3_mox_s1"> <div class="input-group-append"> <button type="button" class="btn btn-danger btn-sm"onClick="delete_station('${new_field_name}')">Eliminar sensor</button> </div> </div> </li>`);
 			});
 		}
 

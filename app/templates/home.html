@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block map %}
+{% block imports %}
   <!-- LEAFLET -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css" />
 
@@ -65,16 +65,22 @@
     var name_index = {{ name_index| safe }}
     var latitude_index = {{ latitude_index| safe }}
     var longitude_index = {{ longitude_index| safe }}
+    //Array that contains all the station's coordinates [latitude, longitude]
+    var array_coordinates = []
 
     //Places all the pins in the map
     for (var count_row = 0; count_row < items_data.length; count_row ++) {
       var item_data = items_data[count_row];
       var coordinates = new L.LatLng(item_data[latitude_index], item_data[longitude_index]);
+      array_coordinates.push([parseFloat(item_data[latitude_index]), parseFloat(item_data[longitude_index])]);
       var marker = new L.Marker(coordinates);
       marker.desc = item_data[name_index] + "<br /> " + '<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal" data-bs-whatever="' + item_data + '">Más información</button>';
       map.addLayer(marker);
       oms.addMarker(marker);
     }
+    //Centers the map given an array of coordinates
+    var bounds = new L.LatLngBounds(array_coordinates);
+    map.fitBounds(bounds);
 
     //Places all the pins in the map    
     /*for (var count_row = 0; count_row < items_data.length; count_row++) {
