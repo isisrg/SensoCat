@@ -36,15 +36,13 @@
 					Seleccione el archivo a subir:
 					{{ form.file(class="form-control", accept=".csv", id="upload_file") }}
 					<br>
-					<div class="progress">
-						<div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+					<!-- <div class="progress">
+						<div id="progress_bar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
 					</div>
-					<div id="targetLayer" style="display:none;"></div>
-					<br>
-					<input type="submit" class="btn btn-primary float-right" value="Subir datos">
+					<div id="targetLayer" style="display:none;"></div> -->
+					<input type="submit" class="btn btn-primary float-right" value="Subir datos" id="upload_button">
 				</form>
 			</div>
 		</div>
 	</div>
-	
 {% endblock %}

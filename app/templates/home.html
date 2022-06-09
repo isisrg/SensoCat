@@ -247,7 +247,7 @@
         });
 
         //FORM
-
+        
         //Set input field to blank so it does not remember the last date that has been put
         document.getElementById('linkedPickers1Input').value=''
         document.getElementById('linkedPickers2Input').value=''
@@ -301,6 +301,7 @@
           //if the specified date-time by the user (final_date) is prior to the specified date-time by the user (initial_date),
           //or if no initial_date has been selected by the user, then the initial_date would have first_date value
           if((final_date > last_read) || (final_date < first_read) || (final_date < initial_date) || final_date == '') final_date = last_read
+          if(initial_date < final_date ) initial_date = first_read
 
           //Contruction of the GET's dynamic URL and submition of the form
           const template = (station_name, sensor, initial_date, final_date) => `/home/chart_table/${station_name}/${sensor}/${initial_date}/${final_date}`;
@@ -334,7 +335,7 @@
             var sensor_read = last_readings[i]
             sensor_read = sensor_read.split(":")
             var sr_sensor = sensor_read[0]                            //sensor read sensor name
-            var sr_value = sensor_read[1]                             //sensor read sensor value
+            var sr_value = parseFloat(sensor_read[1]).toFixed(2)      //sensor read sensor value
             //New tr and new td 
             const table_data_tr = document.createElement('tr');
             const table_data_td_sn = document.createElement('td');    //td sensor name

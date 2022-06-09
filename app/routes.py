@@ -1,5 +1,7 @@
 #Creates the application object as an instance of class Flask imported from the flask package
 from crypt import methods
+from email import message
+from weakref import finalize
 from flask import Flask
 
 # FLASK
@@ -10,6 +12,7 @@ from app.forms import UploadForm, NewStationForm
 #BOTO3
 import boto3
 from boto3.dynamodb.conditions import Key
+import botocore
 from botocore.exceptions import ClientError
 #UTILITIES
 from flask_bootstrap import Bootstrap
@@ -129,6 +132,8 @@ def modal():
 
 @app.route('/home/chart_table/<station_name>/<sensor>/<initial_date>/<final_date>', methods=['GET', 'POST'])
 def chart_table(station_name, sensor, initial_date, final_date):
+    initial_date = initial_date.replace('T', ' ')
+    final_date = final_date.replace('T', ' ')
     if request.method == 'GET':
         reports = reports_table.query(
             KeyConditionExpression=Key('Nombre').eq(station_name) & Key('Timestamp').between(initial_date, final_date)
@@ -137,8 +142,8 @@ def chart_table(station_name, sensor, initial_date, final_date):
         labels = []
         data = []
         for report in reports:
-            labels.append(report['Timestamp'])
-            data.append(report[sensor])
+            labels.append(report['Timestamp'].replace('T', ' '))
+            data.append("{:.2f}".format(float(report[sensor])))
 
         return render_template('chart_table.html', title='Información', station_name=station_name, sensor=sensor, initial_date = initial_date, final_date = final_date, labels = labels, data = data)
 
@@ -196,6 +201,11 @@ def submit_csv():
         #Indicates which table is going to be used
         selected_table = dynamodb.Table(table)
 
+        #operation_message indicates the status of the operation, being successful by default, and if some error happened it is changed to the error message
+        # operation_message = 'Archivo subido correctamente'
+        #operation_code is empty and not send to submit_csv.html unless an error happens, in that case operation_code will have the error code of the operation that has failed
+        # operation_code = ''
+
         for count_row in range(0, row_size):
             print(count_row)
             station_name = df.iloc[count_row,:].values[name_index]
@@ -248,7 +258,13 @@ def submit_csv():
             #Data converted to JSON format
             converted_data = json.loads(data_json)
             selected_table.put_item(Item=converted_data)
-
+            # try:
+            #     response = selected_table.put_item(Item='a')
+            # except botocore.exceptions.ClientError as error:
+            #     operation_code = error.response['ClientError']['Error']['Code']
+            #     operation_message = error.response['Error']['Message']
+            #     return render_template('submit_csv.html', title='Subir archivo', operation_message=operation_message, operation_code=operation_code)
+        # return render_template('submit_csv.html', title='Subir archivo', form=form, operation_message=operation_message)
         return render_template('submit_csv.html', title='Subir archivo', form=form)
 
 @app.route('/new_station', methods=['GET', 'POST'])

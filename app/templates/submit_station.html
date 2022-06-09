@@ -8,25 +8,44 @@
 {% endblock %}
 
 {% block content %}
-	<h2> Nueva estación creada </h2>
-	La estación con los siguientes valores se ha creado correctamente <br>
-	<br>
+	<div class="container">
+		<div class="card bg-transparent">
+			<div class="card-header">
+				<p class="fs-2 fw-light"> Nueva estación creada </p>
+			</div>
+			<div class="card-body">
+				
+				La estación con los siguientes valores se ha creado correctamente <br>
+				<br>
 
-	<b>{{ form_new_station.name.label }}: </b>
-	{{ form_new_station.name.data }}
-	<br>
-	<b>{{ form_new_station.latitude.label }}: </b>
-	{{ form_new_station.latitude.data }}
-	<br>
-	<b>{{ form_new_station.longitude.label }}: </b>
-	{{ form_new_station.longitude.data }}
-	<br>
+				<b>{{ form_new_station.name.label }}: </b>
+				{{ form_new_station.name.data }}
+				<br>
+				<b>{{ form_new_station.latitude.label }}: </b>
+				{{ form_new_station.latitude.data }}
+				<br>
+				<b>{{ form_new_station.longitude.label }}: </b>
+				{{ form_new_station.longitude.data }}
+				<br>
 
-	{% for nested in form_new_station.sensors.entries %}
-	<li>
-		<b>{{ nested.label }}: </b>
-		{{ nested.data }}
-	</li>
-{% endfor %}
-	<a href="{{ url_for('upload') }}"><button type="button" class="btn btn-primary">Subir archivo</button></a>
+				<b>Sensores: </b>
+				{% set first_element = "true" %}
+				
+				{% for nested in form_new_station.sensors.entries %}
+						{% if first_element == "true" %}
+							{{ nested.data }}
+							{% set first_element = "false" %}
+							{{ first_element }}
+						{% else %}
+							, {{ nested.data }}
+						{% endif %}
+				{% endfor %}
+				{{ first_element }}
+
+				<div class="d-flex justify-content-center">
+					<a href="{{ url_for('upload') }}"><button type="button" class="btn btn-primary">Subir archivo</button></a>
+				</div>
+			</div>
+		</div>
+	</div>
 {% endblock %}
