@@ -8,10 +8,13 @@
 {% endblock %}
 
 {% block content %}
+	<br>
 	<div class="container">
 		<div class="card bg-transparent">
 			<div class="card-header">
-				<p class="fs-2 fw-light"> Nueva estación creada </p>
+				<div class="header-title">
+					Nueva estación creada
+				</div>
 			</div>
 			<div class="card-body">
 				
@@ -29,21 +32,36 @@
 				<br>
 
 				<b>Sensores: </b>
-				{% set first_element = "true" %}
+				{% set first_element = namespace(bool="true") %}
 				
 				{% for nested in form_new_station.sensors.entries %}
-						{% if first_element == "true" %}
+						{% if first_element.bool == "true" %}
 							{{ nested.data }}
-							{% set first_element = "false" %}
-							{{ first_element }}
+							{% set first_element.bool = "false" %}
+							<!-- {{ first_element.bool }} -->
 						{% else %}
 							, {{ nested.data }}
 						{% endif %}
 				{% endfor %}
-				{{ first_element }}
+				<!-- {{ first_element.bool }} -->
 
-				<div class="d-flex justify-content-center">
-					<a href="{{ url_for('upload') }}"><button type="button" class="btn btn-primary">Subir archivo</button></a>
+					<!-- <div class="d-flex justify-content-center">
+						<a href="{{ url_for('new_station') }}"><button type="button" class="btn btn-primary">Crear otra estación</button></a>
+						<a href="{{ url_for('upload') }}"><button type="button" class="btn btn-primary">Subir archivo</button></a>
+					</div> -->
+
+
+					<div class="container">
+						<div class="row">
+							<div class="col-xs-12">
+								<div  class="text-center">
+									<a href="{{ url_for('new_station') }}"><button type="button" class="btn btn-primary">Crear otra estación</button></a>
+									<a href="{{ url_for('upload') }}"><button type="button" class="btn btn-primary">Subir archivo</button></a>
+								</div>
+							</div>
+						</div>
+					</div>
+
 				</div>
 			</div>
 		</div>

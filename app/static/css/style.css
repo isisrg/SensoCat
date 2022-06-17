@@ -1,3 +1,23 @@
 body{
     background-color: #f1f1f1;
 }
+
+#div_chart{
+    padding-left: 10%;
+    padding-right: 10%;
+}
+
+.header-title{
+    font-size:xx-large;
+    font-weight: 300;
+}
+
+.header-title-about{
+    font-size:xx-large;
+    font-weight: 300;
+    text-align:center;
+}
+
+.modal-dialog{
+    top: 10%;
+}

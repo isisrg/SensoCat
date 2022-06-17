@@ -57,7 +57,7 @@ def home():
         station_name = items_data.iloc[count_row,:].values[name_index]
         initial_date = reports_table.query(
             Limit = 1,
-            # TRUE -> el más grande FALSE -> el más pequeño
+            # TRUE -> sort order is ascending
             ScanIndexForward = True,
             KeyConditionExpression=Key('Nombre').eq(station_name)
         )
@@ -65,7 +65,7 @@ def home():
 
         final_date = reports_table.query(
             Limit = 1,
-            # TRUE -> el más grande FALSE -> el más pequeño
+            # TRUE -> sort order is descending
             ScanIndexForward = False,
             KeyConditionExpression=Key('Nombre').eq(station_name)
         )
@@ -132,8 +132,6 @@ def modal():
 
 @app.route('/home/chart_table/<station_name>/<sensor>/<initial_date>/<final_date>', methods=['GET', 'POST'])
 def chart_table(station_name, sensor, initial_date, final_date):
-    initial_date = initial_date.replace('T', ' ')
-    final_date = final_date.replace('T', ' ')
     if request.method == 'GET':
         reports = reports_table.query(
             KeyConditionExpression=Key('Nombre').eq(station_name) & Key('Timestamp').between(initial_date, final_date)
@@ -144,6 +142,8 @@ def chart_table(station_name, sensor, initial_date, final_date):
         for report in reports:
             labels.append(report['Timestamp'].replace('T', ' '))
             data.append("{:.2f}".format(float(report[sensor])))
+        initial_date = initial_date.replace('T', ' ')
+        final_date = final_date.replace('T', ' ')
 
         return render_template('chart_table.html', title='Información', station_name=station_name, sensor=sensor, initial_date = initial_date, final_date = final_date, labels = labels, data = data)
 

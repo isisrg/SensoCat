@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block imports %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js" integrity="sha512-QSkVNOCYLtj73J4hbmVoOV6KVZuMluZlioC+trLpewV8qMjsWqlIQvkn1KGX2StWvPMdWGBqim1xlC8krl1EKQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% endblock %}
+
 {% block navbar %}
     <a class="nav-link" href="{{ url_for('home') }}">Inicio</a>
     <a class="nav-link" href="{{ url_for('new_station') }}">Crear estación</a>
@@ -11,7 +15,9 @@
     <br>
     <div class="container">
         <div class="row">
-            <h2>Estación {{ station_name }}</h2>
+            <div class="header-title">
+                Estación {{ station_name }}
+            </div>
             <hr>
             <div class="col">
                 <p>Sensor: {{sensor}}</p>
@@ -27,12 +33,11 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js" integrity="sha512-QSkVNOCYLtj73J4hbmVoOV6KVZuMluZlioC+trLpewV8qMjsWqlIQvkn1KGX2StWvPMdWGBqim1xlC8krl1EKQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     
+    <div id="div_chart">
+        <canvas id="line_chart"></canvas>
+    </div>
     <div class="container">
-        <div id="div_chart">
-            <canvas id="line_chart"></canvas>
-        </div>
         <div id="div_table">
             <table class="table">
                 <thead>

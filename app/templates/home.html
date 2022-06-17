@@ -61,10 +61,10 @@
     });
 
     //items_data takes the list of stations and its information from routes (in python) and parses it to js
-    var items_data = {{ items_data| safe }}
-    var name_index = {{ name_index| safe }}
-    var latitude_index = {{ latitude_index| safe }}
-    var longitude_index = {{ longitude_index| safe }}
+    var items_data = {{ items_data|safe }}
+    var name_index = {{ name_index|safe }}
+    var latitude_index = {{ latitude_index|safe }}
+    var longitude_index = {{ longitude_index|safe }}
     //Array that contains all the station's coordinates [latitude, longitude]
     var array_coordinates = []
 
@@ -197,7 +197,7 @@
         //In order to access those sensors we have to access from the previous position (as this one is a 'nan value') to the beginig of the recipient
         var go_back = 1
       }
-      
+      console.log(recipient)
       var station_name = recipient[recipient.length - 4]
 
       var modalTitle = exampleModal.querySelector('.modal-title')
