@@ -3,8 +3,14 @@ body{
 }
 
 #div_chart{
+    height: 500px;
     padding-left: 10%;
     padding-right: 10%;
+}
+
+.container-chart-info{
+    padding-left: 12%;
+    padding-right: 12%;
 }
 
 .header-title{
@@ -12,9 +18,7 @@ body{
     font-weight: 300;
 }
 
-.header-title-about{
-    font-size:xx-large;
-    font-weight: 300;
+.text-center{
     text-align:center;
 }
 

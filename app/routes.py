@@ -293,44 +293,23 @@ def submit_station():
         #Header values
         header = items_data.columns.values
         print('header: ', header[0])
-        #Number of rows of the csv
-        row_size = items_data.shape[0]
-        #Number of columns of the csv
-        col_size = items_data.shape[1]
+        #Header values
+        header = header.tolist()
 
+        #The data must follow the order specified in locations.csv [Nombre, Latitud, Longitud, Sensores, Fecha-inicio, Fecha-fin, Ultima-lectura],
+        # if it does not follow this order then an error in the home.html will happen when trying to access data
+        data_json='{"Nombre": "'+form_new_station.name.data+'", "Latitud": "'+form_new_station.latitude.data+'", "Longitud": "'+form_new_station.longitude.data+'", "Sensores": "'
+        sensor_data = form_new_station.sensors.entries
         #first equals 0 if its the first iteration on the Sensores column (also indicates wether the Sensores column exists or not)
         first = 0
-
-        data_json = '{"'
-
-        for count_col in range(0, col_size):  
-            if header[count_col] == 'Nombre': data = form_new_station.name.data
-            if header[count_col] == 'Latitud': data = form_new_station.latitude.data
-            if header[count_col] == 'Longitud': data = form_new_station.longitude.data
-            if header[count_col] == 'Sensores': data = form_new_station.sensors.entries
-
-            #Formats the sensors given in the form
-            if header[count_col] == 'Sensores':
-                if count_col == 0:
-                    data_json += str(header[count_col]) + '": "'
-                else:
-                    data_json += ', "' + str(header[count_col]) + '": "'
-                sensors = ''
-                for nested in data:
-                    if first == 0:
-                        sensors += str(nested.data)
-                        first = 1
-                    else:
-                        sensors += ','+str(nested.data) 
-                print(sensors)
-                data_json += sensors+ '"'
+        for nested in sensor_data:
+            if first == 0:
+                data_json += str(nested.data)
+                first = 1
             else:
-                if str(header[count_col]) == 'Nombre' or str(header[count_col]) == 'Latitud' or str(header[count_col]) == 'Longitud':
-                    data_json += ', "' + str(header[count_col]) + '": "' + str(data) + '"'
+                data_json += ','+str(nested.data)
+        data_json += '", "Fecha-inicio": "nan", "Fecha-fin": "nan", "Ultima-lectura": "nan"}'
 
-        data_json += '}'
-        print(data_json)
-        #Data converted to JSON format
         converted_data = json.loads(data_json)
         dynamodb = boto3.resource('dynamodb')
         #Indicates which table is going to be used
