@@ -13,12 +13,12 @@ from app.forms import UploadForm, NewStationForm
 #BOTO3
 import boto3
 from boto3.dynamodb.conditions import Key
-import botocore
-from botocore.exceptions import ClientError
+# import botocore
+# from botocore.exceptions import ClientError
 #UTILITIES
 from flask_bootstrap import Bootstrap
 import pandas as pd
-import numpy as np
+# import numpy as np
 import json
 from datetime import datetime
 
@@ -75,11 +75,10 @@ def home():
         if initial_date and final_date:
             initial_date = initial_date[0]['Timestamp']
             final_date = final_date[0]['Timestamp']
-            print('Station: ', station_name, ' Initial date: ', initial_date, ' Final date: ', final_date)
 
             last_readings = reports_table.query(
-            Limit = 1,
-            KeyConditionExpression=Key('Nombre').eq(station_name) & Key('Timestamp').eq(final_date)
+                Limit = 1,
+                KeyConditionExpression=Key('Nombre').eq(station_name) & Key('Timestamp').eq(final_date)
             )
             last_readings = last_readings['Items'][0]
             last_readings = dict(last_readings)
@@ -92,7 +91,7 @@ def home():
                         first_sensor = 1    
                     else:
                         data_json += ',' + str(key) + ':' + str(value)
-                        
+                              
         else:
             initial_date = "nan"
             final_date = "nan"
@@ -100,25 +99,15 @@ def home():
 
         stations_table.update_item(
             Key={'Nombre': str(station_name)},
-            UpdateExpression="SET #fechainicio = :idate, #fechafin = :fdate",
+            UpdateExpression="SET #fechainicio = :idate, #fechafin = :fdate, #ultimalectura = :ulectura",
             ExpressionAttributeNames={
                 "#fechainicio": "Fecha-inicio",
-                "#fechafin": "Fecha-fin"
-            },
-            ExpressionAttributeValues={
-                ':idate': str(initial_date),
-                ':fdate': str(final_date)
-            },
-            ReturnValues="UPDATED_NEW"
-        )
-        
-        stations_table.update_item(
-            Key={'Nombre': str(station_name)},
-            UpdateExpression="SET #ultimalectura = :ulectura",
-            ExpressionAttributeNames={
+                "#fechafin": "Fecha-fin",
                 "#ultimalectura": "Ultima-lectura"
             },
             ExpressionAttributeValues={
+                ':idate': str(initial_date),
+                ':fdate': str(final_date),
                 ':ulectura': str(data_json),
             },
             ReturnValues="UPDATED_NEW"
@@ -146,7 +135,58 @@ def chart_table(station_name, sensor, initial_date, final_date):
 
     if request.method == 'POST':
         return redirect('/home')
+ 
+@app.route('/new_station', methods=['GET', 'POST'])
+def new_station():
+    form_new_station = NewStationForm()
+    if form_new_station.validate_on_submit():
+        if request.method == 'POST':
+            return render_template('submit_station.html', title='Nueva estación', form_new_station=form_new_station)
+    return render_template('new_station.html', title='Nueva estación', form_new_station=form_new_station)
+
+@app.route('/new_station/submit_station', methods=['GET', 'POST'])
+def submit_station():
+
+    if request.method == 'GET':
+        return redirect('/new_station')
         
+    if request.method == 'POST':
+        form_new_station = NewStationForm()
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table('Estaciones')
+        #Returns all of the table's data
+        table_data = table.scan()
+        #Returns the items from the data collected and saves it into pandas
+        items_data = pd.DataFrame(table_data['Items'])
+
+        #Header values
+        header = items_data.columns.values
+        print('header: ', header[0])
+        #Header values
+        header = header.tolist()
+
+        #The data must follow the order specified in locations.csv [Nombre, Latitud, Longitud, Sensores, Fecha-inicio, Fecha-fin, Ultima-lectura],
+        # if it does not follow this order then an error in the home.html will happen when trying to access data
+        data_json='{"Nombre": "'+form_new_station.name.data+'", "Latitud": "'+form_new_station.latitude.data+'", "Longitud": "'+form_new_station.longitude.data+'", "Sensores": "'
+        sensor_data = form_new_station.sensors.entries
+        #first equals 0 if its the first iteration on the Sensores column (also indicates wether the Sensores column exists or not)
+        first = 0
+        for nested in sensor_data:
+            if first == 0:
+                data_json += str(nested.data)
+                first = 1
+            else:
+                data_json += ','+str(nested.data)
+        data_json += '", "Fecha-inicio": "nan", "Fecha-fin": "nan", "Ultima-lectura": "nan"}'
+
+        converted_data = json.loads(data_json)
+        dynamodb = boto3.resource('dynamodb')
+        #Indicates which table is going to be used
+        selected_table = dynamodb.Table('Estaciones')
+        selected_table.put_item(Item=converted_data)
+        return render_template('submit_station.html', title='Estación', form_new_station=form_new_station)
+
+       
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     form = UploadForm()
@@ -259,56 +299,6 @@ def submit_csv():
             #     return render_template('submit_csv.html', title='Subir archivo', operation_message=operation_message, operation_code=operation_code)
         # return render_template('submit_csv.html', title='Subir archivo', form=form, operation_message=operation_message)
         return render_template('submit_csv.html', title='Subir archivo', form=form)
-
-@app.route('/new_station', methods=['GET', 'POST'])
-def new_station():
-    form_new_station = NewStationForm()
-    if form_new_station.validate_on_submit():
-        if request.method == 'POST':
-            return render_template('submit_station.html', title='Nueva estación', form_new_station=form_new_station)
-    return render_template('new_station.html', title='Nueva estación', form_new_station=form_new_station)
-
-@app.route('/new_station/submit_station', methods=['GET', 'POST'])
-def submit_station():
-
-    if request.method == 'GET':
-        return redirect('/new_station')
-        
-    if request.method == 'POST':
-        form_new_station = NewStationForm()
-        dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table('Estaciones')
-        #Returns all of the table's data
-        table_data = table.scan()
-        #Returns the items from the data collected and saves it into pandas
-        items_data = pd.DataFrame(table_data['Items'])
-
-        #Header values
-        header = items_data.columns.values
-        print('header: ', header[0])
-        #Header values
-        header = header.tolist()
-
-        #The data must follow the order specified in locations.csv [Nombre, Latitud, Longitud, Sensores, Fecha-inicio, Fecha-fin, Ultima-lectura],
-        # if it does not follow this order then an error in the home.html will happen when trying to access data
-        data_json='{"Nombre": "'+form_new_station.name.data+'", "Latitud": "'+form_new_station.latitude.data+'", "Longitud": "'+form_new_station.longitude.data+'", "Sensores": "'
-        sensor_data = form_new_station.sensors.entries
-        #first equals 0 if its the first iteration on the Sensores column (also indicates wether the Sensores column exists or not)
-        first = 0
-        for nested in sensor_data:
-            if first == 0:
-                data_json += str(nested.data)
-                first = 1
-            else:
-                data_json += ','+str(nested.data)
-        data_json += '", "Fecha-inicio": "nan", "Fecha-fin": "nan", "Ultima-lectura": "nan"}'
-
-        converted_data = json.loads(data_json)
-        dynamodb = boto3.resource('dynamodb')
-        #Indicates which table is going to be used
-        selected_table = dynamodb.Table('Estaciones')
-        selected_table.put_item(Item=converted_data)
-        return render_template('submit_station.html', title='Estación', form_new_station=form_new_station)
 
 @app.route('/about')
 def about():
