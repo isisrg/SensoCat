@@ -1,6 +1,7 @@
 #Creates the application object as an instance of class Flask imported from the flask package
 from crypt import methods
 from email import message
+from sqlite3 import Timestamp
 from weakref import finalize
 from flask import Flask
 
@@ -70,28 +71,15 @@ def home():
             KeyConditionExpression=Key('Nombre').eq(station_name)
         )
         final_date = final_date['Items']
-
+        
         if initial_date and final_date:
             initial_date = initial_date[0]['Timestamp']
             final_date = final_date[0]['Timestamp']
             print('Station: ', station_name, ' Initial date: ', initial_date, ' Final date: ', final_date)
 
-            stations_table.update_item(
-                Key={'Nombre': str(station_name)},
-                UpdateExpression="SET #fechainicio = :idate, #fechafin = :fdate",
-                ExpressionAttributeNames={
-                    "#fechainicio": "Fecha-inicio",
-                    "#fechafin": "Fecha-fin"
-                },
-                ExpressionAttributeValues={
-                    ':idate': str(initial_date),
-                    ':fdate': str(final_date)
-                },
-                ReturnValues="UPDATED_NEW"
-            )
             last_readings = reports_table.query(
-                Limit = 1,
-                KeyConditionExpression=Key('Nombre').eq(station_name) & Key('Timestamp').eq(final_date)
+            Limit = 1,
+            KeyConditionExpression=Key('Nombre').eq(station_name) & Key('Timestamp').eq(final_date)
             )
             last_readings = last_readings['Items'][0]
             last_readings = dict(last_readings)
@@ -104,31 +92,40 @@ def home():
                         first_sensor = 1    
                     else:
                         data_json += ',' + str(key) + ':' + str(value)
+                        
+        else:
+            initial_date = "nan"
+            final_date = "nan"
+            data_json = "nan"
 
-            stations_table.update_item(
-                Key={'Nombre': str(station_name)},
-                UpdateExpression="SET #ultimalectura = :ulectura",
-                ExpressionAttributeNames={
-                    "#ultimalectura": "Ultima-lectura"
-                },
-                ExpressionAttributeValues={
-                    ':ulectura': str(data_json),
-                },
-                ReturnValues="UPDATED_NEW"
-            )
+        stations_table.update_item(
+            Key={'Nombre': str(station_name)},
+            UpdateExpression="SET #fechainicio = :idate, #fechafin = :fdate",
+            ExpressionAttributeNames={
+                "#fechainicio": "Fecha-inicio",
+                "#fechafin": "Fecha-fin"
+            },
+            ExpressionAttributeValues={
+                ':idate': str(initial_date),
+                ':fdate': str(final_date)
+            },
+            ReturnValues="UPDATED_NEW"
+        )
+        
+        stations_table.update_item(
+            Key={'Nombre': str(station_name)},
+            UpdateExpression="SET #ultimalectura = :ulectura",
+            ExpressionAttributeNames={
+                "#ultimalectura": "Ultima-lectura"
+            },
+            ExpressionAttributeValues={
+                ':ulectura': str(data_json),
+            },
+            ReturnValues="UPDATED_NEW"
+        )
         print(station_name)
     items_data=items_data.values.tolist()
     return render_template('home.html', title='Inicio', items_data=json.dumps(items_data), name_index=name_index, latitude_index=latitude_index, longitude_index=longitude_index)
-
-@app.route('/home/modal')
-def modal():
-    #Returns all of the table's data
-    table_data = stations_table.scan()
-    #Returns the items from the data collected and saves it into pandas
-    items_data = pd.DataFrame(table_data['Items'])
-    #print(items_data)
-    items_data=items_data.values.tolist()
-    return render_template('modal.html', title='Home', items_data=json.dumps(items_data))
 
 @app.route('/home/chart_table/<station_name>/<sensor>/<initial_date>/<final_date>', methods=['GET', 'POST'])
 def chart_table(station_name, sensor, initial_date, final_date):
@@ -150,10 +147,6 @@ def chart_table(station_name, sensor, initial_date, final_date):
     if request.method == 'POST':
         return redirect('/home')
         
-@app.route('/about')
-def about():
-    return render_template('about.html', title='Sobre nosotros')
-
 @app.route('/upload', methods=['GET', 'POST'])
 def upload():
     form = UploadForm()
@@ -207,7 +200,8 @@ def submit_csv():
         # operation_code = ''
 
         for count_row in range(0, row_size):
-            print(count_row)
+            #print to show the progression of the upload on the terminal
+            print(count_row + 1, '/', row_size)
             station_name = df.iloc[count_row,:].values[name_index]
             # with table.batch_writer() as batch:
             for count_col in range(0, col_size):
@@ -228,8 +222,7 @@ def submit_csv():
                     #All the captor170xx captors
                     elif 'captor170' in row_values[0]:
                         #If the data if from captor17013, captor17016 or captor17017, which have the date with a different format from all the other captors, including the captors from captor170xx, is changed so it stays with the same format as all of the others
-                        if ('captor17013' or 'captor17016' or 'captor17017') in row_values[0]:
-                            print('HOLA')
+                        if (row_values[0] == 'captor17013' or row_values[0] == 'captor17016' or row_values[0] =='captor17017'):
                             old_date = str(row_values[count_col])
                             date = datetime.strptime(f'{old_date}', '%d/%m/%Y %H:%M')
                             new_date = date.strftime('%Y-%m-%dT%H:%M')
@@ -317,6 +310,39 @@ def submit_station():
         selected_table.put_item(Item=converted_data)
         return render_template('submit_station.html', title='Estación', form_new_station=form_new_station)
 
+@app.route('/about')
+def about():
+    return render_template('about.html', title='Sobre nosotros')
+
 @app.route('/index')
 def index():
+    dynamodb = boto3.resource('dynamodb')
+    #Create the DynamoDB table
+    table = dynamodb.create_table(
+        TableName='Informes',
+        KeySchema=[
+            {
+                'AttributeName': 'Nombre',
+                'KeyType': 'HASH'  # Partition key
+            },
+            {
+                'AttributeName': 'Timestamp',
+                'KeyType': 'RANGE'  # Sort key
+            }
+        ],
+        AttributeDefinitions=[
+            {
+                'AttributeName': 'Nombre',
+                'AttributeType': 'S'
+            },
+            {
+                'AttributeName': 'Timestamp',
+                'AttributeType': 'S'
+            }
+        ],
+        ProvisionedThroughput={
+            'ReadCapacityUnits': 30,
+            'WriteCapacityUnits': 30
+        }
+    )
     return render_template('index.html')
