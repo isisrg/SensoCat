@@ -66,7 +66,7 @@ def home():
 
         final_date = reports_table.query(
             Limit = 1,
-            # TRUE -> sort order is descending
+            # FALSE -> sort order is descending
             ScanIndexForward = False,
             KeyConditionExpression=Key('Nombre').eq(station_name)
         )
@@ -298,7 +298,7 @@ def submit_csv():
             #     operation_message = error.response['Error']['Message']
             #     return render_template('submit_csv.html', title='Subir archivo', operation_message=operation_message, operation_code=operation_code)
         # return render_template('submit_csv.html', title='Subir archivo', form=form, operation_message=operation_message)
-        return render_template('submit_csv.html', title='Subir archivo', form=form)
+        return render_template('submit_csv.html', title='Subir archivo')
 
 @app.route('/about')
 def about():
